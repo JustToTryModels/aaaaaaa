@@ -385,12 +385,30 @@ if st.session_state.models_loaded:
             st.rerun()
 
     # --------------------------------------------------
-    # NEW DISCLAIMER MESSAGE (added below the input box)
+    # NEW DISCLAIMER MESSAGE (fixed below chat input)
     # --------------------------------------------------
     st.markdown(
-        "<p style='font-size:0.85em; color:#666; text-align:center;'>"
-        "This is not a conversational AI. It is designed solely for event ticketing queries. "
-        "Responses outside this scope may be inaccurate."
-        "</p>",
+        """
+<style>
+#ticketing-disclaimer{
+  font-size:0.85em;
+  color:#666;
+  text-align:center;
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  padding:8px 4px;
+  background:white;
+  z-index:100;
+}
+div[data-testid="stChatInput"]{
+  margin-bottom:55px;
+}
+</style>
+<div id="ticketing-disclaimer">
+This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
+</div>
+""",
         unsafe_allow_html=True
     )
