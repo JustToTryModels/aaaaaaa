@@ -252,6 +252,16 @@ div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); borde
     """, unsafe_allow_html=True
 )
 
+# Add the fixed footer disclaimer at the very beginning (to ensure it's rendered early and persists during generation)
+st.markdown(
+    """
+    <div class="footer">
+        This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 st.markdown("<h1 style='font-size: 43px;'>Advanced Event Ticketing Chatbot</h1>", unsafe_allow_html=True)
 
 if "models_loaded" not in st.session_state:
@@ -398,13 +408,3 @@ if st.session_state.models_loaded:
             st.session_state.chat_history = []
             last_role = None
             st.rerun()
-
-# Add the fixed footer disclaimer at the very bottom (below chat input)
-st.markdown(
-    """
-    <div class="footer">
-        This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
-    </div>
-    """,
-    unsafe_allow_html=True
-)
