@@ -233,15 +233,14 @@ st.markdown(
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
 
-/* Keep the chat input close to the footer while preserving original width */
+/* Pull the chat input as close to the footer as possible without overlap */
 div[data-testid="stChatInput"] {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     border-radius: 5px;
     padding: 10px;
     margin: 0; /* remove extra spacing */
-    position: sticky; /* preserves original width within the container */
+    position: fixed; /* ensure it's fixed */
     bottom: 28px !important; /* sit just above the fixed footer */
-    z-index: 9998; /* stay below the footer (which is 9999) */
 }
 
 /* --- CORRECTED FOOTER STYLING --- */
