@@ -378,11 +378,11 @@ if st.session_state.models_loaded:
             last_role = "assistant"
             st.rerun()
 
-    # <<<--- MINIMAL CHANGE: ADDED DISCLAIMER MESSAGE HERE --- >>>
-    st.caption("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
-
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button"):
             st.session_state.chat_history = []
             last_role = None
             st.rerun()
+
+    # <<<--- MINIMAL CHANGE: DISCLAIMER MESSAGE IS NOW AT THE VERY BOTTOM OF THE CONTENT AREA --- >>>
+    st.caption("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
