@@ -255,6 +255,21 @@ div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); borde
 # Add the fixed footer disclaimer at the very beginning (to ensure it's rendered early and persists during generation)
 st.markdown(
     """
+    <style>
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #f0f0f0;
+            color: #333;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 9999;
+        }
+    </style>
+
     <div class="footer">
         This is not a conversational AI. It is designed solely for <b>event ticketing</b> queries. Responses outside this scope may be inaccurate.
     </div>
