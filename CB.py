@@ -383,6 +383,5 @@ if st.session_state.models_loaded:
             st.session_state.chat_history = []
             last_role = None
             st.rerun()
-            
-    # --- ADDED DISCLAIMER MESSAGE AT THE BOTTOM ---
-    st.caption("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
+
+st.markdown("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
