@@ -384,4 +384,4 @@ if st.session_state.models_loaded:
             last_role = None
             st.rerun()
 
-st.markdown("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
+    st.markdown("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
