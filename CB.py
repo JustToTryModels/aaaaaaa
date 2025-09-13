@@ -245,7 +245,7 @@ div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); borde
     color: gray; /* Reverted to the original 'gray' color as requested */
     text-align: center;
     padding: 5px 0;
-    font-size: 12px;
+    font-size: 15px;
     z-index: 9999;
 }
 .main { padding-bottom: 40px; }  /* Add padding to main content to avoid overlap */
