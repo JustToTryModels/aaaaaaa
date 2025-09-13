@@ -341,54 +341,55 @@ if st.session_state.models_loaded:
             last_role = "assistant"
             st.rerun()
 
-    prompt = st.chat_input("Enter your own question:")
-
-    if st.session_state.chat_history:
-        # This button is now placed before the chat input processing
-        # to ensure it's visible with the chat history.
-        if st.button("Clear Chat", key="reset_button"):
-            st.session_state.chat_history = []
-            last_role = None
-            st.rerun()
-
-    if prompt:
+    if prompt := st.chat_input("Enter your own question:"):
         prompt = prompt[0].upper() + prompt[1:] if prompt else prompt
         if not prompt.strip():
             st.toast("⚠️ Please enter a question.")
         else:
             st.session_state.chat_history.append({"role": "user", "content": prompt, "avatar": "👤"})
-            # Rerun to display the user message immediately
+            if last_role == "assistant":
+                st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
+            with st.chat_message("user", avatar="👤"):
+                st.markdown(prompt, unsafe_allow_html=True)
+            last_role = "user"
+
+            with st.chat_message("assistant", avatar="🤖"):
+                message_placeholder = st.empty()
+                full_response = ""
+
+                # --- ADDED: OOD CHECK ---
+                if is_ood(prompt, clf_model, clf_tokenizer):
+                    full_response = random.choice(fallback_responses)
+                else:
+                    # --- ORIGINAL LOGIC (UNCHANGED) ---
+                    with st.spinner("Generating response..."):
+                        dynamic_placeholders = extract_dynamic_placeholders(prompt, nlp)
+                        response_gpt = generate_response(model, tokenizer, prompt)
+                        full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
+
+                streamed_text = ""
+                for word in full_response.split(" "):
+                    streamed_text += word + " "
+                    message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
+                    time.sleep(0.05)
+                message_placeholder.markdown(full_response, unsafe_allow_html=True)
+
+            st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
+            last_role = "assistant"
+            st.rerun()
+
+    if st.session_state.chat_history:
+        if st.button("Clear Chat", key="reset_button"):
+            st.session_state.chat_history = []
+            last_role = None
             st.rerun()
             
-    # This logic block handles generating a response if the last message was from the user
-    if st.session_state.chat_history and st.session_state.chat_history[-1]["role"] == "user":
-        user_prompt = st.session_state.chat_history[-1]["content"]
-        
-        with st.chat_message("assistant", avatar="🤖"):
-            message_placeholder = st.empty()
-            full_response = ""
-
-            # --- ADDED: OOD CHECK ---
-            if is_ood(user_prompt, clf_model, clf_tokenizer):
-                full_response = random.choice(fallback_responses)
-            else:
-                # --- ORIGINAL LOGIC (UNCHANGED) ---
-                with st.spinner("Generating response..."):
-                    dynamic_placeholders = extract_dynamic_placeholders(user_prompt, nlp)
-                    response_gpt = generate_response(model, tokenizer, user_prompt)
-                    full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
-
-            streamed_text = ""
-            for word in full_response.split(" "):
-                streamed_text += word + " "
-                message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
-                time.sleep(0.05)
-            message_placeholder.markdown(full_response, unsafe_allow_html=True)
-
-        st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
-        # No rerun here to prevent an infinite loop; the response is now in the history.
-    
-    # --- DISCLAIMER MESSAGE AT THE VERY BOTTOM OF THE CONTENT AREA ---
-    # This is placed at the end of the script to appear at the bottom of all content,
-    # just above the chat input field.
-    st.caption("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
+    # --- NEWLY ADDED DISCLAIMER ---
+    st.markdown(
+        """
+        <div style='text-align: center; color: grey; font-size: 0.8em; margin-top: 20px;'>
+            This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
