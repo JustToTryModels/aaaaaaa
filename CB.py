@@ -378,9 +378,14 @@ if st.session_state.models_loaded:
             last_role = "assistant"
             st.rerun()
 
-    # --- SINGLE CHANGE MADE HERE: Caption is now placed after the chat input logic ---
-    st.caption("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
-    
+    # ✅ FIXED: Placed disclaimer IMMEDIATELY after chat input field
+    st.markdown(
+        "<p style='font-size: 12px; color: gray; text-align: center; margin-top: 5px;'>"
+        "This is not a conversational AI. It is designed solely for event ticketing queries. "
+        "Responses outside this scope may be inaccurate.</p>",
+        unsafe_allow_html=True
+    )
+
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button"):
             st.session_state.chat_history = []
