@@ -220,7 +220,7 @@ def generate_response(model, tokenizer, instruction, max_length=256):
     return response[response_start:].strip()
 
 # =============================
-# CSS AND UI SETUP (CORRECTED FOR FOOTER AND CHAT INPUT)
+# CSS AND UI SETUP (CORRECTED FOR FOOTER)
 # =============================
 
 st.markdown(
@@ -234,30 +234,21 @@ div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-t
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
 div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
 
-/* --- CORRECTED FOOTER AND CHAT INPUT STYLING --- */
-
+/* --- CORRECTED FOOTER STYLING --- */
 /* The footer background adapts to the theme, while the text color remains gray. */
 .footer {
     position: fixed;
     left: 0;
     bottom: 0;
     width: 100%;
-    background: var(--streamlit-background-color);
-    color: gray;
+    background: var(--streamlit-background-color); /* Use Streamlit's theme variable to adapt to light/dark mode */
+    color: gray; /* Reverted to the original 'gray' color as requested */
     text-align: center;
     padding: 5px 0;
     font-size: 13px;
     z-index: 9999;
 }
-
-/* Target the native Streamlit chat input container */
-div[data-testid="stChatInputContainer"] {
-    /* Move it up to sit just above our custom footer */
-    bottom: 30px;
-}
-
-/* Add padding to main content to avoid overlap from BOTH the footer and the chat input */
-.main { padding-bottom: 100px; }
+.main { padding-bottom: 20px; }  /* Add padding to main content to avoid overlap */
 </style>
     """, unsafe_allow_html=True
 )
