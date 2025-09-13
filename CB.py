@@ -96,11 +96,82 @@ def is_ood(query: str, model, tokenizer):
 # ORIGINAL HELPER FUNCTIONS (UNCHANGED)
 # =============================
 
-# (The static_placeholders dictionary, replace_placeholders, extract_dynamic_placeholders,
-#  and generate_response functions remain exactly as in your original script.)
-
+#Define static placeholders with Markdown hyperlinks
 static_placeholders = {
-    # ... (unchanged dictionary content)
+    "{{WEBSITE_URL}}": "[website](https://github.com/MarpakaPradeepSai)",
+    "{{SUPPORT_TEAM_LINK}}": "[support team](https://github.com/MarpakaPradeepSai)",
+    "{{CONTACT_SUPPORT_LINK}}" : "[support team](https://github.com/MarpakaPradeepSai)",
+    "{{SUPPORT_CONTACT_LINK}}" : "[support team](https://github.com/MarpakaPradeepSai)",
+    "{{CANCEL_TICKET_SECTION}}": "<b>Cancel Ticket</b>",
+    "{{CANCEL_TICKET_OPTION}}": "<b>Cancel Ticket</b>",
+    "{{GET_REFUND_OPTION}}": "<b>Get Refund</b>",
+    "{{UPGRADE_TICKET_INFORMATION}}": "<b>Upgrade Ticket Information</b>",
+    "{{TICKET_SECTION}}": "<b>Ticketing</b>",
+    "{{CANCELLATION_POLICY_SECTION}}": "<b>Cancellation Policy</b>",
+    "{{CHECK_CANCELLATION_POLICY_OPTION}}": "<b>Check Cancellation Policy</b>",
+    "{{APP}}": "<b>App</b>",
+    "{{CHECK_CANCELLATION_FEE_OPTION}}": "<b>Check Cancellation Fee</b>",
+    "{{CHECK_REFUND_POLICY_OPTION}}": "<b>Check Refund Policy</b>",
+    "{{CHECK_PRIVACY_POLICY_OPTION}}": "<b>Check Privacy Policy</b>",
+    "{{SAVE_BUTTON}}": "<b>Save</b>",
+    "{{EDIT_BUTTON}}": "<b>Edit</b>",
+    "{{CANCELLATION_FEE_SECTION}}": "<b>Cancellation Fee</b>",
+    "{{CHECK_CANCELLATION_FEE_INFORMATION}}": "<b>Check Cancellation Fee Information</b>",
+    "{{PRIVACY_POLICY_LINK}}": "<b>Privacy Policy</b>",
+    "{{REFUND_SECTION}}": "<b>Refund</b>",
+    "{{REFUND_POLICY_LINK}}": "<b>Refund Policy</b>",
+    "{{CUSTOMER_SERVICE_SECTION}}": "<b>Customer Service</b>",
+    "{{DELIVERY_PERIOD_INFORMATION}}": "<b>Delivery Period</b>",
+    "{{EVENT_ORGANIZER_OPTION}}": "<b>Event Organizer</b>",
+    "{{FIND_TICKET_OPTION}}": "<b>Find Ticket</b>",
+    "{{FIND_UPCOMING_EVENTS_OPTION}}": "<b>Find Upcoming Events</b>",
+    "{{CONTACT_SECTION}}": "<b>Contact</b>",
+    "{{SEARCH_BUTTON}}": "<b>Search</b>",
+    "{{SUPPORT_SECTION}}": "<b>Support</b>",
+    "{{EVENTS_SECTION}}": "<b>Events</b>",
+    "{{EVENTS_PAGE}}": "<b>Events</b>",
+    "{{TYPE_EVENTS_OPTION}}": "<b>Type Events</b>",
+    "{{PAYMENT_SECTION}}": "<b>Payment</b>",
+    "{{PAYMENT_OPTION}}": "<b>Payment</b>",
+    "{{CANCELLATION_SECTION}}": "<b>Cancellation</b>",
+    "{{CANCELLATION_OPTION}}": "<b>Cancellation</b>",
+    "{{REFUND_OPTION}}": "<b>Refund</b>",
+    "{{TRANSFER_TICKET_OPTION}}": "<b>Transfer Ticket</b>",
+    "{{REFUND_STATUS_OPTION}}": "<b>Refund Status</b>",
+    "{{DELIVERY_SECTION}}": "<b>Delivery</b>",
+    "{{SELL_TICKET_OPTION}}": "<b>Sell Ticket</b>",
+    "{{CANCELLATION_FEE_INFORMATION}}": "<b>Cancellation Fee Information</b>",
+    "{{CUSTOMER_SUPPORT_PAGE}}": "<b>Customer Support</b>",
+    "{{PAYMENT_METHOD}}" : "<b>Payment</b>",
+    "{{VIEW_PAYMENT_METHODS}}": "<b>View Payment Methods</b>",
+    "{{VIEW_CANCELLATION_POLICY}}": "<b>View Cancellation Policy</b>",
+    "{{SUPPORT_ SECTION}}" : "<b>Support</b>",
+    "{{CUSTOMER_SUPPORT_SECTION}}" : "<b>Customer Support</b>",
+    "{{HELP_SECTION}}" : "<b>Help</b>",
+    "{{TICKET_INFORMATION}}" : "<b>Ticket Information</b>",
+    "{{UPGRADE_TICKET_BUTTON}}" : "<b>Upgrade Ticket</b>",
+    "{{CANCEL_TICKET_BUTTON}}" : "<b>Cancel Ticket</b>",
+    "{{GET_REFUND_BUTTON}}" : "<b>Get Refund</b>",
+    "{{PAYMENTS_HELP_SECTION}}" : "<b>Payments Help</b>",
+    "{{PAYMENTS_PAGE}}" : "<b>Payments</b>",
+    "{{TICKET_DETAILS}}" : "<b>Ticket Details</b>",
+    "{{TICKET_INFORMATION_PAGE}}" : "<b>Ticket Information</b>",
+    "{{REPORT_PAYMENT_PROBLEM}}" : "<b>Report Payment</b>",
+    "{{TICKET_OPTIONS}}" : "<b>Ticket Options</b>",
+    "{{SEND_BUTTON}}" : "<b>Send</b>",
+    "{{PAYMENT_ISSUE_OPTION}}" : "<b>Payment Issue</b>",
+    "{{CUSTOMER_SUPPORT_PORTAL}}" : "<b>Customer Support</b>",
+    "{{UPGRADE_TICKET_OPTION}}" : "<b>Upgrade Ticket</b>",
+    "{{TICKET_AVAILABILITY_TAB}}" : "<b>Ticket Availability</b>",
+    "{{TRANSFER_TICKET_BUTTON}}" : "<b>Transfer Ticket</b>",
+    "{{TICKET_MANAGEMENT}}" : "<b>Ticket Management</b>",
+    "{{TICKET_STATUS_TAB}}" : "<b>Ticket Status</b>",
+    "{{TICKETING_PAGE}}" : "<b>Ticketing</b>",
+    "{{TICKET_TRANSFER_TAB}}" : "<b>Ticket Transfer</b>",
+    "{{CURRENT_TICKET_DETAILS}}" : "<b>Current Ticket Details</b>",
+    "{{UPGRADE_OPTION}}" : "<b>Upgrade</b>",
+    "{{CONNECT_WITH_ORGANIZER}}" : "<b>Connect with Organizer</b>",
+    "{{TICKETS_TAB}}" : "<b>Tickets</b>",
     "{{ASSISTANCE_SECTION}}" : "<b>Assistance Section</b>",
 }
 
@@ -168,10 +239,6 @@ div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); borde
 
 st.markdown("<h1 style='font-size: 43px;'>Advanced Event Ticketing Chatbot</h1>", unsafe_allow_html=True)
 
-# =============================
-# MODEL LOADING
-# =============================
-
 if "models_loaded" not in st.session_state:
     st.session_state.models_loaded = False
 
@@ -182,19 +249,20 @@ example_queries = [
     "How can I track my ticket cancellation status?", "How can I sell my ticket?"
 ]
 
+# --- MODIFIED: Load all models at once ---
 if not st.session_state.models_loaded:
     with st.spinner("Loading models and resources... Please wait..."):
         try:
             nlp = load_spacy_model()
             gpt2_model, gpt2_tokenizer = load_gpt2_model_and_tokenizer()
-            clf_model, clf_tokenizer = load_classifier_model()
+            clf_model, clf_tokenizer = load_classifier_model()  # Load the new model
 
             if all([nlp, gpt2_model, gpt2_tokenizer, clf_model, clf_tokenizer]):
                 st.session_state.models_loaded = True
                 st.session_state.nlp = nlp
-                st.session_state.model = gpt2_model
+                st.session_state.model = gpt2_model # Keep original names for compatibility
                 st.session_state.tokenizer = gpt2_tokenizer
-                st.session_state.clf_model = clf_model
+                st.session_state.clf_model = clf_model # Add new models to session state
                 st.session_state.clf_tokenizer = clf_tokenizer
                 st.rerun()
             else:
@@ -202,9 +270,9 @@ if not st.session_state.models_loaded:
         except Exception as e:
             st.error(f"Error loading models: {str(e)}")
 
-# =============================
-# MAIN CHAT INTERFACE
-# =============================
+# ==================================
+# MAIN CHAT INTERFACE (LOGIC ADDED)
+# ==================================
 
 if st.session_state.models_loaded:
     st.write("Ask me about ticket bookings, cancellations, refunds, or any event-related inquiries!")
@@ -215,7 +283,7 @@ if st.session_state.models_loaded:
     )
     process_query_button = st.button("Ask this question", key="query_button")
 
-    # Access loaded models
+    # Access all loaded models from session state
     nlp = st.session_state.nlp
     model = st.session_state.model
     tokenizer = st.session_state.tokenizer
@@ -226,6 +294,7 @@ if st.session_state.models_loaded:
         st.session_state.chat_history = []
 
     last_role = None
+
     for message in st.session_state.chat_history:
         if message["role"] == "user" and last_role == "assistant":
             st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
@@ -236,8 +305,9 @@ if st.session_state.models_loaded:
     if process_query_button:
         if selected_query == "Choose your question":
             st.error("⚠️ Please select your question from the dropdown.")
-        else:
-            prompt_from_dropdown = selected_query[0].upper() + selected_query[1:]
+        elif selected_query:
+            prompt_from_dropdown = selected_query
+            prompt_from_dropdown = prompt_from_dropdown[0].upper() + prompt_from_dropdown[1:] if prompt_from_dropdown else prompt_from_dropdown
 
             st.session_state.chat_history.append({"role": "user", "content": prompt_from_dropdown, "avatar": "👤"})
             if last_role == "assistant":
@@ -250,16 +320,18 @@ if st.session_state.models_loaded:
                 message_placeholder = st.empty()
                 full_response = ""
 
+                # --- ADDED: OOD CHECK ---
                 if is_ood(prompt_from_dropdown, clf_model, clf_tokenizer):
                     full_response = random.choice(fallback_responses)
                 else:
+                    # --- ORIGINAL LOGIC (UNCHANGED) ---
                     with st.spinner("Generating response..."):
                         dynamic_placeholders = extract_dynamic_placeholders(prompt_from_dropdown, nlp)
                         response_gpt = generate_response(model, tokenizer, prompt_from_dropdown)
                         full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
 
                 streamed_text = ""
-                for word in full_response.split():
+                for word in full_response.split(" "):
                     streamed_text += word + " "
                     message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
                     time.sleep(0.05)
@@ -285,16 +357,18 @@ if st.session_state.models_loaded:
                 message_placeholder = st.empty()
                 full_response = ""
 
+                # --- ADDED: OOD CHECK ---
                 if is_ood(prompt, clf_model, clf_tokenizer):
                     full_response = random.choice(fallback_responses)
                 else:
+                    # --- ORIGINAL LOGIC (UNCHANGED) ---
                     with st.spinner("Generating response..."):
                         dynamic_placeholders = extract_dynamic_placeholders(prompt, nlp)
                         response_gpt = generate_response(model, tokenizer, prompt)
                         full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
 
                 streamed_text = ""
-                for word in full_response.split():
+                for word in full_response.split(" "):
                     streamed_text += word + " "
                     message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
                     time.sleep(0.05)
@@ -304,22 +378,11 @@ if st.session_state.models_loaded:
             last_role = "assistant"
             st.rerun()
 
+    # <<<--- MINIMAL CHANGE: ADDED DISCLAIMER MESSAGE HERE --- >>>
+    st.caption("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
+
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button"):
             st.session_state.chat_history = []
             last_role = None
             st.rerun()
-
-# ==============================================================
-# DISCLAIMER (appears at the very bottom of the page)
-# ==============================================================
-
-st.markdown(
-    """
-<p style='font-size:0.85em; color:#666; text-align:center; margin-top:2rem;'>
-This is not a conversational AI. It is designed solely for event ticketing queries. 
-Responses outside this scope may be inaccurate.
-</p>
-""",
-    unsafe_allow_html=True
-)
