@@ -230,9 +230,6 @@ st.markdown(
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
 
-/* --- CSS CHANGES FOR POSITIONING --- */
-
-/* 1. Raise the chat input bar to create space for the footer below it */
 div[data-testid="stChatInput"] {
     bottom: 30px !important;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -241,10 +238,9 @@ div[data-testid="stChatInput"] {
     margin: 10px 0;
 }
 
-/* 2. Style the new fixed footer */
 .footer-disclaimer {
     position: fixed;
-    bottom: 5px; /* Position it at the very bottom */
+    bottom: 5px;
     left: 0;
     width: 100%;
     text-align: center;
@@ -254,7 +250,6 @@ div[data-testid="stChatInput"] {
     z-index: 100;
 }
 
-/* 3. Add more padding to the main content area to prevent the last message from being hidden */
 .main .block-container {
     padding-bottom: 8rem;
 }
@@ -316,8 +311,22 @@ if st.session_state.models_loaded:
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    last_role = None
+    # --- FIX STEP 1: Process user input and rerun immediately ---
+    user_prompt = None
+    if process_query_button and selected_query != "Choose your question":
+        user_prompt = selected_query
+    
+    if prompt := st.chat_input("Enter your own question:"):
+        if prompt.strip():
+            user_prompt = prompt
 
+    if user_prompt:
+        formatted_prompt = user_prompt[0].upper() + user_prompt[1:] if user_prompt else user_prompt
+        st.session_state.chat_history.append({"role": "user", "content": formatted_prompt, "avatar": "👤"})
+        st.rerun()
+
+    # --- FIX STEP 2: Display history and generate response if needed ---
+    last_role = None
     for message in st.session_state.chat_history:
         if message["role"] == "user" and last_role == "assistant":
             st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
@@ -325,65 +334,38 @@ if st.session_state.models_loaded:
             st.markdown(message["content"], unsafe_allow_html=True)
         last_role = message["role"]
 
-    if process_query_button:
-        if selected_query == "Choose your question":
-            st.error("⚠️ Please select your question from the dropdown.")
-        elif selected_query:
-            prompt_from_dropdown = selected_query
-            prompt_from_dropdown = prompt_from_dropdown[0].upper() + prompt_from_dropdown[1:] if prompt_from_dropdown else prompt_from_dropdown
-
-            st.session_state.chat_history.append({"role": "user", "content": prompt_from_dropdown, "avatar": "👤"})
-            with st.chat_message("assistant", avatar="🤖"):
-                message_placeholder = st.empty()
-                full_response = ""
-                if is_ood(prompt_from_dropdown, clf_model, clf_tokenizer):
+    # Generate bot response only if the last message was from the user
+    if st.session_state.chat_history and st.session_state.chat_history[-1]["role"] == "user":
+        user_question = st.session_state.chat_history[-1]["content"]
+        with st.chat_message("assistant", avatar="🤖"):
+            message_placeholder = st.empty()
+            full_response = ""
+            
+            with st.spinner("Generating response..."):
+                if is_ood(user_question, clf_model, clf_tokenizer):
                     full_response = random.choice(fallback_responses)
                 else:
-                    with st.spinner("Generating response..."):
-                        dynamic_placeholders = extract_dynamic_placeholders(prompt_from_dropdown, nlp)
-                        response_gpt = generate_response(model, tokenizer, prompt_from_dropdown)
-                        full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
-                streamed_text = ""
-                for word in full_response.split(" "):
-                    streamed_text += word + " "
-                    message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
-                    time.sleep(0.05)
-                message_placeholder.markdown(full_response, unsafe_allow_html=True)
-            st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
-            st.rerun()
+                    dynamic_placeholders = extract_dynamic_placeholders(user_question, nlp)
+                    response_gpt = generate_response(model, tokenizer, user_question)
+                    full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
+            
+            streamed_text = ""
+            for word in full_response.split(" "):
+                streamed_text += word + " "
+                message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
+                time.sleep(0.05)
+            message_placeholder.markdown(full_response, unsafe_allow_html=True)
+        
+        st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
+        st.rerun()
 
-    if prompt := st.chat_input("Enter your own question:"):
-        prompt = prompt[0].upper() + prompt[1:] if prompt else prompt
-        if not prompt.strip():
-            st.toast("⚠️ Please enter a question.")
-        else:
-            st.session_state.chat_history.append({"role": "user", "content": prompt, "avatar": "👤"})
-            with st.chat_message("assistant", avatar="🤖"):
-                message_placeholder = st.empty()
-                full_response = ""
-                if is_ood(prompt, clf_model, clf_tokenizer):
-                    full_response = random.choice(fallback_responses)
-                else:
-                    with st.spinner("Generating response..."):
-                        dynamic_placeholders = extract_dynamic_placeholders(prompt, nlp)
-                        response_gpt = generate_response(model, tokenizer, prompt)
-                        full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
-
-                streamed_text = ""
-                for word in full_response.split(" "):
-                    streamed_text += word + " "
-                    message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
-                    time.sleep(0.05)
-                message_placeholder.markdown(full_response, unsafe_allow_html=True)
-            st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
-            st.rerun()
-
+    # Clear chat button
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button"):
             st.session_state.chat_history = []
             st.rerun()
 
-    # Create the footer element. The CSS above handles the fixed positioning.
+    # The fixed footer
     st.markdown(
         """
         <div class="footer-disclaimer">
