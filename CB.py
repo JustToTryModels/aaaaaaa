@@ -230,6 +230,18 @@ st.markdown(
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
 div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
+
+/* --- NEW CSS FOR THE FOOTER MESSAGE --- */
+div[data-testid="stChatInput"]::before {
+    content: "This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.";
+    display: block;
+    text-align: center;
+    color: #808080;
+    font-size: 0.8em;
+    margin-bottom: 8px; /* Adds space between the message and the input box */
+    font-family: 'Times New Roman', Times, serif !important;
+}
+
 </style>
     """, unsafe_allow_html=True
 )
@@ -298,6 +310,9 @@ if st.session_state.models_loaded:
             st.markdown(message["content"], unsafe_allow_html=True)
         last_role = message["role"]
 
+    # This container will hold the chat input and the footer message will be attached via CSS
+    chat_container = st.container()
+
     # Logic for handling the dropdown query button
     if process_query_button:
         if selected_query == "Choose your question":
@@ -307,9 +322,8 @@ if st.session_state.models_loaded:
             prompt_from_dropdown = prompt_from_dropdown[0].upper() + prompt_from_dropdown[1:] if prompt_from_dropdown else prompt_from_dropdown
 
             st.session_state.chat_history.append({"role": "user", "content": prompt_from_dropdown, "avatar": "👤"})
-            # No need to display here, the loop at the top handles it on rerun
-
-            with st.chat_message("assistant", avatar="🤖"): # Temporarily display for immediate feedback
+            # Display assistant response immediately
+            with st.chat_message("assistant", avatar="🤖"):
                 message_placeholder = st.empty()
                 full_response = ""
                 if is_ood(prompt_from_dropdown, clf_model, clf_tokenizer):
@@ -328,16 +342,15 @@ if st.session_state.models_loaded:
             st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
             st.rerun()
 
-    # Logic for handling the main chat input
+    # The main chat input field. The footer message will appear above this.
     if prompt := st.chat_input("Enter your own question:"):
         prompt = prompt[0].upper() + prompt[1:] if prompt else prompt
         if not prompt.strip():
             st.toast("⚠️ Please enter a question.")
         else:
             st.session_state.chat_history.append({"role": "user", "content": prompt, "avatar": "👤"})
-            # No need to display here, the loop at the top handles it on rerun
-
-            with st.chat_message("assistant", avatar="🤖"): # Temporarily display for immediate feedback
+            # Display assistant response immediately
+            with st.chat_message("assistant", avatar="🤖"):
                 message_placeholder = st.empty()
                 full_response = ""
                 if is_ood(prompt, clf_model, clf_tokenizer):
@@ -363,13 +376,5 @@ if st.session_state.models_loaded:
             st.session_state.chat_history = []
             st.rerun()
 
-    # --- CORRECTED PLACEMENT: This is now the last element in the main content area ---
-    # This ensures it always appears just above the st.chat_input bar.
-    st.markdown(
-        """
-        <div style="text-align: center; color: #808080; font-size: 0.8em; margin-top: 15px;">
-        This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    # The previous markdown for the disclaimer has been removed from here
+    # and placed into the CSS block at the top of the file for correct positioning.
