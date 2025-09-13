@@ -378,11 +378,11 @@ if st.session_state.models_loaded:
             last_role = "assistant"
             st.rerun()
 
+    # --- SINGLE CHANGE MADE HERE: Caption is now placed after the chat input logic ---
+    st.caption("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
+    
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button"):
             st.session_state.chat_history = []
             last_role = None
             st.rerun()
-            
-    # --- CHANGE ADDED HERE ---
-    st.caption("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
