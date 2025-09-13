@@ -295,6 +295,7 @@ if st.session_state.models_loaded:
 
     last_role = None
 
+    # Display chat history
     for message in st.session_state.chat_history:
         if message["role"] == "user" and last_role == "assistant":
             st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
@@ -302,6 +303,7 @@ if st.session_state.models_loaded:
             st.markdown(message["content"], unsafe_allow_html=True)
         last_role = message["role"]
 
+    # Handle dropdown query
     if process_query_button:
         if selected_query == "Choose your question":
             st.error("⚠️ Please select your question from the dropdown.")
@@ -310,11 +312,8 @@ if st.session_state.models_loaded:
             prompt_from_dropdown = prompt_from_dropdown[0].upper() + prompt_from_dropdown[1:] if prompt_from_dropdown else prompt_from_dropdown
 
             st.session_state.chat_history.append({"role": "user", "content": prompt_from_dropdown, "avatar": "👤"})
-            if last_role == "assistant":
-                st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
             with st.chat_message("user", avatar="👤"):
                 st.markdown(prompt_from_dropdown, unsafe_allow_html=True)
-            last_role = "user"
 
             with st.chat_message("assistant", avatar="🤖"):
                 message_placeholder = st.empty()
@@ -338,20 +337,17 @@ if st.session_state.models_loaded:
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
 
             st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
-            last_role = "assistant"
             st.rerun()
 
+    # Handle manual chat input
     if prompt := st.chat_input("Enter your own question:"):
         prompt = prompt[0].upper() + prompt[1:] if prompt else prompt
         if not prompt.strip():
             st.toast("⚠️ Please enter a question.")
         else:
             st.session_state.chat_history.append({"role": "user", "content": prompt, "avatar": "👤"})
-            if last_role == "assistant":
-                st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
             with st.chat_message("user", avatar="👤"):
                 st.markdown(prompt, unsafe_allow_html=True)
-            last_role = "user"
 
             with st.chat_message("assistant", avatar="🤖"):
                 message_placeholder = st.empty()
@@ -375,13 +371,14 @@ if st.session_state.models_loaded:
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
 
             st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
-            last_role = "assistant"
             st.rerun()
 
+    # Clear chat button
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button"):
             st.session_state.chat_history = []
-            last_role = None
             st.rerun()
-
-    st.markdown("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
+            
+    # --- THIS IS THE FINAL ELEMENT RENDERED BEFORE THE CHAT INPUT ---
+    # By placing it here, it will appear as a footer just above the input field.
+    st.caption("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
