@@ -232,15 +232,9 @@ st.markdown(
 * { font-family: 'Times New Roman', Times, serif !important; }
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
-div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
-/* Add disclaimer below the chat input field */
-div[data-testid="stChatInput"]::after {
-    content: "This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.";
-    display: block;
-    font-size: 0.9em;
-    color: #6b6b6b;
-    margin-top: 6px;
-}
+div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; bottom: 48px; z-index: 1001; }
+/* Footer fixed at the very bottom, below the chat input */
+.app-footer { position: fixed; left: 0; right: 0; bottom: 0; text-align: center; padding: 8px 12px; font-size: 0.9em; color: #6b6b6b; z-index: 1000; }
 </style>
     """, unsafe_allow_html=True
 )
@@ -391,3 +385,13 @@ if st.session_state.models_loaded:
             st.session_state.chat_history = []
             last_role = None
             st.rerun()
+
+    # Fixed footer at the very bottom, below the chat input
+    st.markdown(
+        """
+        <div class="app-footer">
+            This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
