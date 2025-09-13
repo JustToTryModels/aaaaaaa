@@ -248,7 +248,7 @@ div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); borde
     font-size: 13px;
     z-index: 9999;
 }
-.main { padding-bottom: 20px; }  /* Add padding to main content to avoid overlap */
+.main { padding-bottom: 20px; }  /* Add padding to main content to avoid overlap (reduced to bring chat input closer to footer) */
 </style>
     """, unsafe_allow_html=True
 )
