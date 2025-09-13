@@ -294,6 +294,16 @@ if not st.session_state.models_loaded:
 # ==================================
 
 if st.session_state.models_loaded:
+    # --- FIX: RENDER THE FOOTER AT THE TOP TO ENSURE IT ALWAYS APPEARS ---
+    st.markdown(
+        """
+        <div class="footer-disclaimer">
+        This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
     st.write("Ask me about ticket bookings, cancellations, refunds, or any event-related inquiries!")
 
     selected_query = st.selectbox(
@@ -311,7 +321,7 @@ if st.session_state.models_loaded:
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    # --- FIX STEP 1: Process user input and rerun immediately ---
+    # Process user input and rerun immediately to show the user's message
     user_prompt = None
     if process_query_button and selected_query != "Choose your question":
         user_prompt = selected_query
@@ -325,7 +335,7 @@ if st.session_state.models_loaded:
         st.session_state.chat_history.append({"role": "user", "content": formatted_prompt, "avatar": "👤"})
         st.rerun()
 
-    # --- FIX STEP 2: Display history and generate response if needed ---
+    # Display history and generate response if the last message was from the user
     last_role = None
     for message in st.session_state.chat_history:
         if message["role"] == "user" and last_role == "assistant":
@@ -334,7 +344,6 @@ if st.session_state.models_loaded:
             st.markdown(message["content"], unsafe_allow_html=True)
         last_role = message["role"]
 
-    # Generate bot response only if the last message was from the user
     if st.session_state.chat_history and st.session_state.chat_history[-1]["role"] == "user":
         user_question = st.session_state.chat_history[-1]["content"]
         with st.chat_message("assistant", avatar="🤖"):
@@ -365,12 +374,4 @@ if st.session_state.models_loaded:
             st.session_state.chat_history = []
             st.rerun()
 
-    # The fixed footer
-    st.markdown(
-        """
-        <div class="footer-disclaimer">
-        This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    # The footer markdown is now at the top of this block.
