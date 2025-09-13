@@ -384,11 +384,13 @@ if st.session_state.models_loaded:
             last_role = None
             st.rerun()
 
-# --- Footer message at the very bottom of the app (no layout changes to the chat input) ---
-st.markdown(
-    "<div style='text-align:center; color:#6b6b6b; font-size:0.9em; margin-top: 16px;'>"
-    "This is not a conversational AI. It is designed solely for event ticketing queries. "
-    "Responses outside this scope may be inaccurate."
-    "</div>",
-    unsafe_allow_html=True
-)
+    # --------------------------------------------------
+    # NEW DISCLAIMER MESSAGE (added below the input box)
+    # --------------------------------------------------
+    st.markdown(
+        "<p style='font-size:0.85em; color:#666; text-align:center;'>"
+        "This is not a conversational AI. It is designed solely for event ticketing queries. "
+        "Responses outside this scope may be inaccurate."
+        "</p>",
+        unsafe_allow_html=True
+    )
