@@ -69,6 +69,7 @@ def load_gpt2_model_and_tokenizer():
         st.error(f"Failed to load GPT-2 model from Hugging Face Hub. Error: {e}")
         return None, None
 
+# --- NEW: Function to load the classifier model ---
 @st.cache_resource(show_spinner=False)
 def load_classifier_model():
     try:
@@ -79,6 +80,7 @@ def load_classifier_model():
         st.error(f"Failed to load classifier model from Hugging Face Hub. Error: {e}")
         return None, None
 
+# --- NEW: Function to check if a query is Out-of-Domain (OOD) ---
 def is_ood(query: str, model, tokenizer):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -91,9 +93,10 @@ def is_ood(query: str, model, tokenizer):
     return pred_id == 1  # True if OOD (label 1)
 
 # =============================
-# ORIGINAL HELPER FUNCTIONS
+# ORIGINAL HELPER FUNCTIONS (UNCHANGED)
 # =============================
 
+#Define static placeholders with Markdown hyperlinks
 static_placeholders = {
     "{{WEBSITE_URL}}": "[website](https://github.com/MarpakaPradeepSai)",
     "{{SUPPORT_TEAM_LINK}}": "[support team](https://github.com/MarpakaPradeepSai)",
@@ -217,7 +220,7 @@ def generate_response(model, tokenizer, instruction, max_length=256):
     return response[response_start:].strip()
 
 # =============================
-# CSS AND UI SETUP
+# CSS AND UI SETUP (MODIFIED FOR FOOTER)
 # =============================
 
 st.markdown(
@@ -230,6 +233,21 @@ st.markdown(
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
 div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
+
+/* Footer styling to place disclaimer at the very bottom, below the chat input */
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: white;
+    color: gray;
+    text-align: center;
+    padding: 5px 0;
+    font-size: 12px;
+    z-index: 9999;  /* Ensure it's on top */
+}
+.main { padding-bottom: 40px; }  /* Add padding to main content to avoid overlap */
 </style>
     """, unsafe_allow_html=True
 )
@@ -246,19 +264,20 @@ example_queries = [
     "How can I track my ticket cancellation status?", "How can I sell my ticket?"
 ]
 
+# --- MODIFIED: Load all models at once ---
 if not st.session_state.models_loaded:
     with st.spinner("Loading models and resources... Please wait..."):
         try:
             nlp = load_spacy_model()
             gpt2_model, gpt2_tokenizer = load_gpt2_model_and_tokenizer()
-            clf_model, clf_tokenizer = load_classifier_model()
+            clf_model, clf_tokenizer = load_classifier_model()  # Load the new model
 
             if all([nlp, gpt2_model, gpt2_tokenizer, clf_model, clf_tokenizer]):
                 st.session_state.models_loaded = True
                 st.session_state.nlp = nlp
-                st.session_state.model = gpt2_model
+                st.session_state.model = gpt2_model # Keep original names for compatibility
                 st.session_state.tokenizer = gpt2_tokenizer
-                st.session_state.clf_model = clf_model
+                st.session_state.clf_model = clf_model # Add new models to session state
                 st.session_state.clf_tokenizer = clf_tokenizer
                 st.rerun()
             else:
@@ -267,7 +286,7 @@ if not st.session_state.models_loaded:
             st.error(f"Error loading models: {str(e)}")
 
 # ==================================
-# MAIN CHAT INTERFACE
+# MAIN CHAT INTERFACE (LOGIC ADDED)
 # ==================================
 
 if st.session_state.models_loaded:
@@ -279,6 +298,7 @@ if st.session_state.models_loaded:
     )
     process_query_button = st.button("Ask this question", key="query_button")
 
+    # Access all loaded models from session state
     nlp = st.session_state.nlp
     model = st.session_state.model
     tokenizer = st.session_state.tokenizer
@@ -314,9 +334,12 @@ if st.session_state.models_loaded:
             with st.chat_message("assistant", avatar="🤖"):
                 message_placeholder = st.empty()
                 full_response = ""
+
+                # --- ADDED: OOD CHECK ---
                 if is_ood(prompt_from_dropdown, clf_model, clf_tokenizer):
                     full_response = random.choice(fallback_responses)
                 else:
+                    # --- ORIGINAL LOGIC (UNCHANGED) ---
                     with st.spinner("Generating response..."):
                         dynamic_placeholders = extract_dynamic_placeholders(prompt_from_dropdown, nlp)
                         response_gpt = generate_response(model, tokenizer, prompt_from_dropdown)
@@ -348,9 +371,12 @@ if st.session_state.models_loaded:
             with st.chat_message("assistant", avatar="🤖"):
                 message_placeholder = st.empty()
                 full_response = ""
+
+                # --- ADDED: OOD CHECK ---
                 if is_ood(prompt, clf_model, clf_tokenizer):
                     full_response = random.choice(fallback_responses)
                 else:
+                    # --- ORIGINAL LOGIC (UNCHANGED) ---
                     with st.spinner("Generating response..."):
                         dynamic_placeholders = extract_dynamic_placeholders(prompt, nlp)
                         response_gpt = generate_response(model, tokenizer, prompt)
@@ -367,19 +393,18 @@ if st.session_state.models_loaded:
             last_role = "assistant"
             st.rerun()
 
-    # Place the Clear Chat button before the disclaimer
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button"):
             st.session_state.chat_history = []
             last_role = None
             st.rerun()
 
-    # --- CHANGE: MOVED THIS BLOCK TO THE VERY END ---
-    # This ensures it's the last element in the main, scrollable content area,
-    # appearing just above the docked st.chat_input bar.
-    st.markdown(
-        "<p style='font-size: 12px; color: gray; text-align: center; margin-top: 20px;'>" # Added margin-top for spacing
-        "This is not a conversational AI. It is designed solely for event ticketing queries. "
-        "Responses outside this scope may be inaccurate.</p>",
-        unsafe_allow_html=True
-    )
+# Add the fixed footer disclaimer at the very bottom (below chat input)
+st.markdown(
+    """
+    <div class="footer">
+        This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
+    </div>
+    """,
+    unsafe_allow_html=True
+)
