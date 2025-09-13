@@ -231,17 +231,24 @@ div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-t
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
 div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
 
-/* --- NEW CSS FOR THE FOOTER MESSAGE --- */
-div[data-testid="stChatInput"]::before {
-    content: "This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.";
-    display: block;
+/* --- CORRECTED CSS FOR THE FIXED FOOTER --- */
+.footer-disclaimer {
+    position: fixed;
+    bottom: 5px; /* Position it a few pixels from the very bottom edge */
+    left: 0;
+    width: 100%;
     text-align: center;
     color: #808080;
     font-size: 0.8em;
-    margin-bottom: 8px; /* Adds space between the message and the input box */
     font-family: 'Times New Roman', Times, serif !important;
+    padding-bottom: 5px; /* Add padding to the bottom */
+    z-index: 100; /* Ensure it stays on top of other content, but below chat input overlay */
 }
 
+/* Add padding to the bottom of the main app content to prevent the footer from overlapping the last message */
+.main .block-container {
+    padding-bottom: 5rem; /* Adjust this value as needed */
+}
 </style>
     """, unsafe_allow_html=True
 )
@@ -302,7 +309,6 @@ if st.session_state.models_loaded:
 
     last_role = None
 
-    # Display chat history first
     for message in st.session_state.chat_history:
         if message["role"] == "user" and last_role == "assistant":
             st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
@@ -310,10 +316,6 @@ if st.session_state.models_loaded:
             st.markdown(message["content"], unsafe_allow_html=True)
         last_role = message["role"]
 
-    # This container will hold the chat input and the footer message will be attached via CSS
-    chat_container = st.container()
-
-    # Logic for handling the dropdown query button
     if process_query_button:
         if selected_query == "Choose your question":
             st.error("⚠️ Please select your question from the dropdown.")
@@ -322,7 +324,6 @@ if st.session_state.models_loaded:
             prompt_from_dropdown = prompt_from_dropdown[0].upper() + prompt_from_dropdown[1:] if prompt_from_dropdown else prompt_from_dropdown
 
             st.session_state.chat_history.append({"role": "user", "content": prompt_from_dropdown, "avatar": "👤"})
-            # Display assistant response immediately
             with st.chat_message("assistant", avatar="🤖"):
                 message_placeholder = st.empty()
                 full_response = ""
@@ -342,14 +343,12 @@ if st.session_state.models_loaded:
             st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
             st.rerun()
 
-    # The main chat input field. The footer message will appear above this.
     if prompt := st.chat_input("Enter your own question:"):
         prompt = prompt[0].upper() + prompt[1:] if prompt else prompt
         if not prompt.strip():
             st.toast("⚠️ Please enter a question.")
         else:
             st.session_state.chat_history.append({"role": "user", "content": prompt, "avatar": "👤"})
-            # Display assistant response immediately
             with st.chat_message("assistant", avatar="🤖"):
                 message_placeholder = st.empty()
                 full_response = ""
@@ -370,11 +369,18 @@ if st.session_state.models_loaded:
             st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
             st.rerun()
 
-    # Logic for the clear chat button
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button"):
             st.session_state.chat_history = []
             st.rerun()
 
-    # The previous markdown for the disclaimer has been removed from here
-    # and placed into the CSS block at the top of the file for correct positioning.
+    # --- THIS IS THE CORRECTED IMPLEMENTATION FOR A FIXED FOOTER ---
+    # The HTML element is created here, and the CSS above styles it and fixes it to the bottom.
+    st.markdown(
+        """
+        <div class="footer-disclaimer">
+        This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
