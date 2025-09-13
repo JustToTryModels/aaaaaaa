@@ -1,0 +1,259 @@
+import streamlit as st
+import torch
+from transformers import GPT2Tokenizer, GPT2LMHeadModel
+import spacy
+import time
+
+# Load spaCy model for NER
+@st.cache_resource
+def load_spacy_model():
+    return spacy.load("en_core_web_trf")
+
+# Load the DistilGPT2 model and tokenizer from Hugging Face
+@st.cache_resource(show_spinner=False)
+def load_model_and_tokenizer():
+    try:
+        model = GPT2LMHeadModel.from_pretrained("Zlib2/ETCSCb_DistilGPT2")
+        tokenizer = GPT2Tokenizer.from_pretrained("Zlib2/ETCSCb_DistilGPT2")
+        return model, tokenizer
+    except Exception as e:
+        st.error(f"Error loading model from Hugging Face: {str(e)}")
+        return None, None
+
+# Static placeholder definitions
+static_placeholders = {
+    "{{WEBSITE_URL}}": "[website](https://github.com/MarpakaPradeepSai)",
+    "{{SUPPORT_TEAM_LINK}}": "[support team](https://github.com/MarpakaPradeepSai)",
+    "{{CONTACT_SUPPORT_LINK}}" : "[support team](https://github.com/MarpakaPradeepSai)",
+    # ... (Keep all other mappings you already have here unchanged)
+}
+
+# Replace placeholders
+def replace_placeholders(response, dynamic_placeholders, static_placeholders):
+    for placeholder, value in static_placeholders.items():
+        response = response.replace(placeholder, value)
+    for placeholder, value in dynamic_placeholders.items():
+        response = response.replace(placeholder, value)
+    return response
+
+# Extract dynamic placeholders using spaCy NER
+def extract_dynamic_placeholders(user_question, nlp):
+    doc = nlp(user_question)
+    dynamic_placeholders = {}
+    for ent in doc.ents:
+        if ent.label_ == "EVENT":
+            dynamic_placeholders["{{EVENT}}"] = f"<b>{ent.text.title()}</b>"
+        elif ent.label_ == "GPE":
+            dynamic_placeholders["{{CITY}}"] = f"<b>{ent.text.title()}</b>"
+    if "{{EVENT}}" not in dynamic_placeholders:
+        dynamic_placeholders["{{EVENT}}"] = "event"
+    if "{{CITY}}" not in dynamic_placeholders:
+        dynamic_placeholders["{{CITY}}"] = "city"
+    return dynamic_placeholders
+
+# Generate model response
+def generate_response(model, tokenizer, instruction, max_length=256):
+    model.eval()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+    input_text = f"Instruction: {instruction} Response:"
+    inputs = tokenizer(input_text, return_tensors="pt", padding=True).to(device)
+
+    with torch.no_grad():
+        outputs = model.generate(
+            input_ids=inputs["input_ids"],
+            attention_mask=inputs["attention_mask"],
+            max_length=max_length,
+            num_return_sequences=1,
+            temperature=0.7,
+            top_p=0.95,
+            do_sample=True,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    response_start = response.find("Response:") + len("Response:")
+    return response[response_start:].strip()
+
+# --- CSS Styling ---
+st.markdown(
+    """
+    <style>
+    .stButton>button {
+        background: linear-gradient(90deg, #ff8a00, #e52e71);
+        color: white !important;
+        border: none;
+        border-radius: 25px;
+        padding: 10px 20px;
+        font-size: 1.2em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 5px;
+        width: auto;
+        min-width: 100px;
+        font-family: 'Times New Roman', Times, serif !important;
+    }
+    .stButton>button:hover {
+        transform: scale(1.05);
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+        color: white !important;
+    }
+    .stButton>button:active {
+        transform: scale(0.98);
+    }
+    * {
+        font-family: 'Times New Roman', Times, serif !important;
+    }
+    .stSelectbox > div > div > div > div,
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea,
+    .stChatMessage,
+    .streamlit-expanderContent {
+        font-family: 'Times New Roman', Times, serif !important;
+    }
+    .horizontal-line {
+        border-top: 2px solid #e0e0e0;
+        margin: 15px 0;
+    }
+    div[data-testid="stChatInput"] {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        border-radius: 5px;
+        padding: 10px;
+        margin: 10px 0;
+    }
+    div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) {
+        background: linear-gradient(90deg, #29ABE2, #0077B6);
+        color: white !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# --- Streamlit App ---
+st.markdown("<h1 style='font-size: 43px;'>Advanced Event Ticketing Chatbot</h1>", unsafe_allow_html=True)
+
+# Example user queries
+example_queries = [
+    "How do I buy a ticket?",
+    "How can I upgrade my ticket for the upcoming event in Hyderabad?",
+    "How do I change my personal details on my ticket?",
+    "How can I find details about upcoming events?",
+    "How do I contact customer service?",
+    "How do I get a refund?",
+    "What is the ticket cancellation fee?",
+    "How can I track my ticket cancellation status?",
+    "How can I sell my ticket?"
+]
+
+if "models_loaded" not in st.session_state:
+    st.session_state.models_loaded = False
+
+if not st.session_state.models_loaded:
+    with st.spinner("Loading models and resources... Please wait..."):
+        nlp = load_spacy_model()
+        model, tokenizer = load_model_and_tokenizer()
+
+        if model is not None and tokenizer is not None:
+            st.session_state.models_loaded = True
+            st.session_state.nlp = nlp
+            st.session_state.model = model
+            st.session_state.tokenizer = tokenizer
+            st.rerun()
+        else:
+            st.error("Failed to load model. Please check Hugging Face repo and try again.")
+
+# Chat interface
+if st.session_state.models_loaded:
+    st.write("Ask me about ticket bookings, cancellations, refunds, or any event-related inquiries!")
+
+    selected_query = st.selectbox("Choose a query from examples:", ["Choose your question"] + example_queries, key="query_selectbox", label_visibility="collapsed")
+    process_query_button = st.button("Ask this question", key="query_button")
+
+    nlp = st.session_state.nlp
+    model = st.session_state.model
+    tokenizer = st.session_state.tokenizer
+
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
+    last_role = None
+    for message in st.session_state.chat_history:
+        if message["role"] == "user" and last_role == "assistant":
+            st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
+        with st.chat_message(message["role"], avatar=message["avatar"]):
+            st.markdown(message["content"], unsafe_allow_html=True)
+        last_role = message["role"]
+
+    if process_query_button:
+        if selected_query == "Choose your question":
+            st.error("⚠️ Please select your question from the dropdown.")
+        else:
+            prompt = selected_query.strip().capitalize()
+            st.session_state.chat_history.append({"role": "user", "content": prompt, "avatar": "👤"})
+            if last_role == "assistant":
+                st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
+
+            with st.chat_message("user", avatar="👤"):
+                st.markdown(prompt, unsafe_allow_html=True)
+            last_role = "user"
+
+            with st.chat_message("assistant", avatar="🤖"):
+                message_placeholder = st.empty()
+                full_response = ""
+                with st.spinner("Generating response..."):
+                    dynamic_ph = extract_dynamic_placeholders(prompt, nlp)
+                    response_text = generate_response(model, tokenizer, prompt)
+                    full_response = replace_placeholders(response_text, dynamic_ph, static_placeholders)
+                streamed = ""
+                for word in full_response.split():
+                    streamed += word + " "
+                    message_placeholder.markdown(streamed + "▌", unsafe_allow_html=True)
+                    time.sleep(0.05)
+                message_placeholder.markdown(full_response, unsafe_allow_html=True)
+
+            st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
+            last_role = "assistant"
+            st.rerun()
+
+    if prompt := st.chat_input("Enter your own question:"):
+        prompt = prompt.strip().capitalize()
+        if not prompt:
+            st.toast("⚠️ Please enter a question.")
+        else:
+            st.session_state.chat_history.append({"role": "user", "content": prompt, "avatar": "👤"})
+            if last_role == "assistant":
+                st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
+
+            with st.chat_message("user", avatar="👤"):
+                st.markdown(prompt, unsafe_allow_html=True)
+            last_role = "user"
+
+            with st.chat_message("assistant", avatar="🤖"):
+                message_placeholder = st.empty()
+                full_response = ""
+                with st.spinner("Generating response..."):
+                    dynamic_ph = extract_dynamic_placeholders(prompt, nlp)
+                    response_text = generate_response(model, tokenizer, prompt)
+                    full_response = replace_placeholders(response_text, dynamic_ph, static_placeholders)
+                streamed = ""
+                for word in full_response.split():
+                    streamed += word + " "
+                    message_placeholder.markdown(streamed + "▌", unsafe_allow_html=True)
+                    time.sleep(0.05)
+                message_placeholder.markdown(full_response, unsafe_allow_html=True)
+
+            st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
+            last_role = "assistant"
+            st.rerun()
+
+    if st.session_state.chat_history:
+        if st.button("Clear Chat", key="reset_button"):
+            st.session_state.chat_history = []
+            last_role = None
+            st.rerun()
