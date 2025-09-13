@@ -384,11 +384,12 @@ if st.session_state.models_loaded:
             last_role = None
             st.rerun()
             
-    # --- NEWLY ADDED DISCLAIMER ---
+    # --- DISCLAIMER PLACED AT THE VERY BOTTOM OF THE MAIN CONTENT AREA ---
+    # This ensures it appears just above the "Enter your own question" input field.
     st.markdown(
         """
-        <div style='text-align: center; color: grey; font-size: 0.8em; margin-top: 20px;'>
-            This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
+        <div style='position: fixed; bottom: 55px; width: 100%; text-align: center; color: grey; font-size: 0.8em; background-color: transparent;'>
+            <p style='margin: 0;'>This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.</p>
         </div>
         """,
         unsafe_allow_html=True
