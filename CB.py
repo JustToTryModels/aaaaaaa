@@ -241,6 +241,7 @@ div[data-testid="stChatInput"] {
     margin: 0; /* remove extra spacing */
     position: fixed; /* ensure it's fixed */
     bottom: 28px !important; /* sit just above the fixed footer */
+    width: 100% !important; /* Ensure full width */
 }
 
 /* --- CORRECTED FOOTER STYLING --- */
