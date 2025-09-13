@@ -156,7 +156,7 @@ static_placeholders = {
     "{{PAYMENTS_PAGE}}" : "<b>Payments</b>",
     "{{TICKET_DETAILS}}" : "<b>Ticket Details</b>",
     "{{TICKET_INFORMATION_PAGE}}" : "<b>Ticket Information</b>",
-    "{{REPORT_PAYMENT_PROBLEM}}" : "<b>Report Payment</b>",
+    "{{REPORT_PAYMENT_PROblem}}" : "<b>Report Payment</b>",
     "{{TICKET_OPTIONS}}" : "<b>Ticket Options</b>",
     "{{SEND_BUTTON}}" : "<b>Send</b>",
     "{{PAYMENT_ISSUE_OPTION}}" : "<b>Payment Issue</b>",
@@ -384,12 +384,12 @@ if st.session_state.models_loaded:
             last_role = None
             st.rerun()
 
-    # Add the informational message at the bottom
-    st.markdown("---")
-    st.markdown(
-        "<div style='text-align: center; color: gray; margin-top: 20px;'>"
-        "This is not a conversational AI. It is designed solely for event ticketing queries. "
-        "Responses outside this scope may be inaccurate."
-        "</div>",
-        unsafe_allow_html=True
-    )
+# Add the informational message at the very bottom of the app
+st.markdown("---")
+st.markdown(
+    "<div style='text-align: center; color: gray; margin-top: 20px;'>"
+    "This is not a conversational AI. It is designed solely for event ticketing queries. "
+    "Responses outside this scope may be inaccurate."
+    "</div>",
+    unsafe_allow_html=True
+)
