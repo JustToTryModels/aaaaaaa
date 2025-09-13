@@ -2,11 +2,11 @@ import streamlit as st
 import torch
 from transformers import (
     GPT2Tokenizer, GPT2LMHeadModel,
-    AutoTokenizer, AutoModelForSequenceClassification  # Added for the classifier
+    AutoTokenizer, AutoModelForSequenceClassification
 )
 import spacy
 import time
-import random  # Added for fallback responses
+import random
 
 # =============================
 # MODEL AND CONFIGURATION SETUP
@@ -14,7 +14,7 @@ import random  # Added for fallback responses
 
 # Hugging Face model IDs
 GPT2_MODEL_ID = "Zlib2/ETCSCb_DistilGPT2"
-CLASSIFIER_ID = "Zlib2/Query_Classifier_DistilBERT"  # ID for the new classifier model
+CLASSIFIER_ID = "Zlib2/Query_Classifier_DistilBERT"
 
 # Random OOD Fallback Responses
 fallback_responses = [
@@ -369,18 +369,18 @@ if st.session_state.models_loaded:
             last_role = "assistant"
             st.rerun()
 
-    # --- NEW: ADDED INFORMATIONAL MESSAGE BELOW CHAT INPUT ---
-    st.markdown(
-        """
-        <div style="text-align: center; color: #808080; font-size: 0.8em; margin-top: 20px;">
-        This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button"):
             st.session_state.chat_history = []
             last_role = None
             st.rerun()
+
+    # --- CORRECTED PLACEMENT: The disclaimer is now the last element rendered in the main block ---
+    st.markdown(
+        """
+        <div style="text-align: center; color: #808080; font-size: 0.8em;">
+        This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
