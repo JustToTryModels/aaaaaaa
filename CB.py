@@ -232,7 +232,7 @@ st.markdown(
 * { font-family: 'Times New Roman', Times, serif !important; }
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
-div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
+div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; bottom: 25px !important; }
 
 /* --- CORRECTED FOOTER STYLING --- */
 /* The footer background adapts to the theme, while the text color remains gray. */
@@ -248,7 +248,7 @@ div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); borde
     font-size: 13px;
     z-index: 9999;
 }
-.main { padding-bottom: 20px; }  /* Add padding to main content to avoid overlap (reduced to bring chat input closer to footer) */
+.main { padding-bottom: 45px; }  /* Add padding to main content to avoid overlap */
 </style>
     """, unsafe_allow_html=True
 )
