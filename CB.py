@@ -358,7 +358,7 @@ if st.session_state.models_loaded:
                 streamed_text = ""
                 for word in full_response.split(" "):
                     streamed_text += word + " "
-                    message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
+                    message_placeholder.markdown(streamed_text + "⬤", unsafe_allow_html=True)
                     time.sleep(0.05)
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
 
@@ -395,7 +395,7 @@ if st.session_state.models_loaded:
                 streamed_text = ""
                 for word in full_response.split(" "):
                     streamed_text += word + " "
-                    message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
+                    message_placeholder.markdown(streamed_text + "⬤", unsafe_allow_html=True)
                     time.sleep(0.05)
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
 
