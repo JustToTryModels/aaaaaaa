@@ -220,7 +220,7 @@ def generate_response(model, tokenizer, instruction, max_length=256):
     return response[response_start:].strip()
 
 # =============================
-# CSS AND UI SETUP (UNCHANGED)
+# CSS AND UI SETUP
 # =============================
 
 st.markdown(
@@ -233,6 +233,25 @@ st.markdown(
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
 div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
+
+/* --- CSS for the fixed footer --- */
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: #f0f2f6; /* A light color matching Streamlit's theme */
+    color: #555; /* A darker gray for readability */
+    text-align: center;
+    padding: 8px;
+    font-size: 14px;
+    border-top: 1px solid #e0e0e0;
+    z-index: 1000;
+}
+/* Adjust main content padding to avoid overlap with the footer */
+.main .block-container {
+    padding-bottom: 5rem; /* Provides space for the footer */
+}
 </style>
     """, unsafe_allow_html=True
 )
@@ -271,7 +290,7 @@ if not st.session_state.models_loaded:
             st.error(f"Error loading models: {str(e)}")
 
 # ==================================
-# MAIN CHAT INTERFACE (LOGIC ADDED)
+# MAIN CHAT INTERFACE
 # ==================================
 
 if st.session_state.models_loaded:
@@ -384,5 +403,9 @@ if st.session_state.models_loaded:
             last_role = None
             st.rerun()
 
-    # --- ADDED DISCLAIMER MESSAGE AT THE BOTTOM ---
-    st.caption("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
+# --- ADDED DISCLAIMER HTML AT THE VERY END OF THE SCRIPT ---
+st.markdown("""
+    <div class="footer">
+        This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
+    </div>
+""", unsafe_allow_html=True)
