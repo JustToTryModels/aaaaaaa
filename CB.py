@@ -229,25 +229,34 @@ st.markdown(
 * { font-family: 'Times New Roman', Times, serif !important; }
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
-div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
 
-/* --- CORRECTED CSS FOR THE FIXED FOOTER --- */
+/* --- CSS CHANGES FOR POSITIONING --- */
+
+/* 1. Raise the chat input bar to create space for the footer below it */
+div[data-testid="stChatInput"] {
+    bottom: 30px !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+/* 2. Style the new fixed footer */
 .footer-disclaimer {
     position: fixed;
-    bottom: 5px; /* Position it a few pixels from the very bottom edge */
+    bottom: 5px; /* Position it at the very bottom */
     left: 0;
     width: 100%;
     text-align: center;
     color: #808080;
     font-size: 0.8em;
     font-family: 'Times New Roman', Times, serif !important;
-    padding-bottom: 5px; /* Add padding to the bottom */
-    z-index: 100; /* Ensure it stays on top of other content, but below chat input overlay */
+    z-index: 100;
 }
 
-/* Add padding to the bottom of the main app content to prevent the footer from overlapping the last message */
+/* 3. Add more padding to the main content area to prevent the last message from being hidden */
 .main .block-container {
-    padding-bottom: 5rem; /* Adjust this value as needed */
+    padding-bottom: 8rem;
 }
 </style>
     """, unsafe_allow_html=True
@@ -374,8 +383,7 @@ if st.session_state.models_loaded:
             st.session_state.chat_history = []
             st.rerun()
 
-    # --- THIS IS THE CORRECTED IMPLEMENTATION FOR A FIXED FOOTER ---
-    # The HTML element is created here, and the CSS above styles it and fixes it to the bottom.
+    # Create the footer element. The CSS above handles the fixed positioning.
     st.markdown(
         """
         <div class="footer-disclaimer">
