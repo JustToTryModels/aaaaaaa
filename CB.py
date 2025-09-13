@@ -91,7 +91,7 @@ def is_ood(query: str, model, tokenizer):
     return pred_id == 1
 
 # =============================
-# ORIGINAL HELPER FUNCTIONS (UNCHANGED)
+# ORIGINAL HELPER FUNCTIONS
 # =============================
 
 static_placeholders = {
@@ -217,7 +217,7 @@ def generate_response(model, tokenizer, instruction, max_length=256):
     return response[response_start:].strip()
 
 # =============================
-# CSS AND UI SETUP (UNCHANGED)
+# CSS AND UI SETUP
 # =============================
 
 st.markdown(
@@ -267,7 +267,7 @@ if not st.session_state.models_loaded:
             st.error(f"Error loading models: {str(e)}")
 
 # ==================================
-# MAIN CHAT INTERFACE (LOGIC ADDED)
+# MAIN CHAT INTERFACE
 # ==================================
 
 if st.session_state.models_loaded:
@@ -290,6 +290,7 @@ if st.session_state.models_loaded:
 
     last_role = None
 
+    # Display chat history first
     for message in st.session_state.chat_history:
         if message["role"] == "user" and last_role == "assistant":
             st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
@@ -297,6 +298,7 @@ if st.session_state.models_loaded:
             st.markdown(message["content"], unsafe_allow_html=True)
         last_role = message["role"]
 
+    # Logic for handling the dropdown query button
     if process_query_button:
         if selected_query == "Choose your question":
             st.error("⚠️ Please select your question from the dropdown.")
@@ -305,16 +307,11 @@ if st.session_state.models_loaded:
             prompt_from_dropdown = prompt_from_dropdown[0].upper() + prompt_from_dropdown[1:] if prompt_from_dropdown else prompt_from_dropdown
 
             st.session_state.chat_history.append({"role": "user", "content": prompt_from_dropdown, "avatar": "👤"})
-            if last_role == "assistant":
-                st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
-            with st.chat_message("user", avatar="👤"):
-                st.markdown(prompt_from_dropdown, unsafe_allow_html=True)
-            last_role = "user"
+            # No need to display here, the loop at the top handles it on rerun
 
-            with st.chat_message("assistant", avatar="🤖"):
+            with st.chat_message("assistant", avatar="🤖"): # Temporarily display for immediate feedback
                 message_placeholder = st.empty()
                 full_response = ""
-
                 if is_ood(prompt_from_dropdown, clf_model, clf_tokenizer):
                     full_response = random.choice(fallback_responses)
                 else:
@@ -322,34 +319,27 @@ if st.session_state.models_loaded:
                         dynamic_placeholders = extract_dynamic_placeholders(prompt_from_dropdown, nlp)
                         response_gpt = generate_response(model, tokenizer, prompt_from_dropdown)
                         full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
-
                 streamed_text = ""
                 for word in full_response.split(" "):
                     streamed_text += word + " "
                     message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
                     time.sleep(0.05)
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
-
             st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
-            last_role = "assistant"
             st.rerun()
 
+    # Logic for handling the main chat input
     if prompt := st.chat_input("Enter your own question:"):
         prompt = prompt[0].upper() + prompt[1:] if prompt else prompt
         if not prompt.strip():
             st.toast("⚠️ Please enter a question.")
         else:
             st.session_state.chat_history.append({"role": "user", "content": prompt, "avatar": "👤"})
-            if last_role == "assistant":
-                st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
-            with st.chat_message("user", avatar="👤"):
-                st.markdown(prompt, unsafe_allow_html=True)
-            last_role = "user"
+            # No need to display here, the loop at the top handles it on rerun
 
-            with st.chat_message("assistant", avatar="🤖"):
+            with st.chat_message("assistant", avatar="🤖"): # Temporarily display for immediate feedback
                 message_placeholder = st.empty()
                 full_response = ""
-
                 if is_ood(prompt, clf_model, clf_tokenizer):
                     full_response = random.choice(fallback_responses)
                 else:
@@ -364,21 +354,20 @@ if st.session_state.models_loaded:
                     message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
                     time.sleep(0.05)
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
-
             st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
-            last_role = "assistant"
             st.rerun()
 
+    # Logic for the clear chat button
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button"):
             st.session_state.chat_history = []
-            last_role = None
             st.rerun()
 
-    # --- CORRECTED PLACEMENT: The disclaimer is now the last element rendered in the main block ---
+    # --- CORRECTED PLACEMENT: This is now the last element in the main content area ---
+    # This ensures it always appears just above the st.chat_input bar.
     st.markdown(
         """
-        <div style="text-align: center; color: #808080; font-size: 0.8em;">
+        <div style="text-align: center; color: #808080; font-size: 0.8em; margin-top: 15px;">
         This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
         </div>
         """,
