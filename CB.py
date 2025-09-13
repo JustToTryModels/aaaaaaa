@@ -235,14 +235,14 @@ div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-t
 div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
 
 /* --- CORRECTED FOOTER STYLING --- */
-/* The footer now uses Streamlit's theme variables to adapt to light/dark modes */
+/* The footer background adapts to the theme, while the text color remains gray. */
 .footer {
     position: fixed;
     left: 0;
     bottom: 0;
     width: 100%;
-    background: var(--streamlit-background-color); /* Use Streamlit's theme variable for background */
-    color: var(--streamlit-secondary-font); /* Use Streamlit's theme variable for secondary text color */
+    background: var(--streamlit-background-color); /* Use Streamlit's theme variable to adapt to light/dark mode */
+    color: gray; /* Reverted to the original 'gray' color as requested */
     text-align: center;
     padding: 5px 0;
     font-size: 12px;
