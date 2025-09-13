@@ -220,7 +220,7 @@ def generate_response(model, tokenizer, instruction, max_length=256):
     return response[response_start:].strip()
 
 # =============================
-# CSS AND UI SETUP (MODIFIED FOR FOOTER)
+# CSS AND UI SETUP (UNCHANGED)
 # =============================
 
 st.markdown(
@@ -233,21 +233,6 @@ st.markdown(
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
 div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
-
-/* Footer styling to place disclaimer at the very bottom, below the chat input */
-.footer {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    background-color: white;
-    color: gray;
-    text-align: center;
-    padding: 5px 0;
-    font-size: 12px;
-    z-index: 9999;  /* Ensure it's on top */
-}
-.main { padding-bottom: 40px; }  /* Add padding to main content to avoid overlap */
 </style>
     """, unsafe_allow_html=True
 )
@@ -398,13 +383,3 @@ if st.session_state.models_loaded:
             st.session_state.chat_history = []
             last_role = None
             st.rerun()
-
-# Add the fixed footer disclaimer at the very bottom (below chat input)
-st.markdown(
-    """
-    <div class="footer">
-        This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
-    </div>
-    """,
-    unsafe_allow_html=True
-)
