@@ -384,8 +384,5 @@ if st.session_state.models_loaded:
             last_role = None
             st.rerun()
 
-    # --- ADDED: Disclaimer message at the bottom ---
-    st.markdown(
-        "<p style='font-size: 0.9em; color: grey; text-align: center;'>This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.</p>",
-        unsafe_allow_html=True
-    )
+    # --- NEW: Add the disclaimer message here ---
+    st.warning("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
