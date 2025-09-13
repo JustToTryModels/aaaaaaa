@@ -18,36 +18,36 @@ CLASSIFIER_ID = "Zlib2/Query_Classifier_DistilBERT"  # ID for the new classifier
 
 # Random OOD Fallback Responses
 fallback_responses = [
-    "I’m sorry, but I am unable to assist with this request. If you need help regarding event tickets, I’d be happy to support you.",
+    "I'm sorry, but I am unable to assist with this request. If you need help regarding event tickets, I'd be happy to support you.",
     "Apologies, but I am not able to provide assistance on this matter. Please let me know if you require help with event tickets.",
     "Unfortunately, I cannot assist with this. However, I am here to help with any event ticket-related concerns you may have.",
     "Regrettably, I am unable to assist with this request. If there's anything I can do regarding event tickets, feel free to ask.",
     "I regret that I am unable to assist in this case. Please reach out if you need support related to event tickets.",
-    "Apologies, but this falls outside the scope of my support. I’m here if you need any help with event ticket issues.",
-    "I'm sorry, but I cannot assist with this particular topic. If you have questions about event tickets, I’d be glad to help.",
-    "I regret that I’m unable to provide assistance here. Please let me know how I can support you with event ticket matters.",
+    "Apologies, but this falls outside the scope of my support. I'm here if you need any help with event ticket issues.",
+    "I'm sorry, but I cannot assist with this particular topic. If you have questions about event tickets, I'd be glad to help.",
+    "I regret that I'm unable to provide assistance here. Please let me know how I can support you with event ticket matters.",
     "Unfortunately, I am not equipped to assist with this. If you need help with event tickets, I am here for that.",
-    "I apologize, but I cannot help with this request. However, I’d be happy to assist with anything related to event tickets.",
-    "I’m sorry, but I’m unable to support this request. If it’s about event tickets, I’ll gladly help however I can.",
+    "I apologize, but I cannot help with this request. However, I'd be happy to assist with anything related to event tickets.",
+    "I'm sorry, but I'm unable to support this request. If it's about event tickets, I'll gladly help however I can.",
     "This matter falls outside the assistance I can offer. Please let me know if you need help with event ticket-related inquiries.",
-    "Regrettably, this is not something I can assist with. I’m happy to help with any event ticket questions you may have.",
-    "I’m unable to provide support for this issue. However, I can assist with concerns regarding event tickets.",
-    "I apologize, but I cannot help with this matter. If your inquiry is related to event tickets, I’d be more than happy to assist.",
+    "Regrettably, this is not something I can assist with. I'm happy to help with any event ticket questions you may have.",
+    "I'm unable to provide support for this issue. However, I can assist with concerns regarding event tickets.",
+    "I apologize, but I cannot help with this matter. If your inquiry is related to event tickets, I'd be more than happy to assist.",
     "I regret that I am unable to offer help in this case. I am, however, available for any event ticket-related questions.",
-    "Unfortunately, I’m not able to assist with this. Please let me know if there’s anything I can do regarding event tickets.",
-    "I'm sorry, but I cannot assist with this topic. However, I’m here to help with any event ticket concerns you may have.",
-    "Apologies, but this request falls outside of my support scope. If you need help with event tickets, I’m happy to assist.",
-    "I’m afraid I can’t help with this matter. If there’s anything related to event tickets you need, feel free to reach out.",
-    "This is beyond what I can assist with at the moment. Let me know if there’s anything I can do to help with event tickets.",
-    "Sorry, I’m unable to provide support on this issue. However, I’d be glad to assist with event ticket-related topics.",
-    "Apologies, but I can’t assist with this. Please let me know if you have any event ticket inquiries I can help with.",
-    "I’m unable to help with this matter. However, if you need assistance with event tickets, I’m here for you.",
-    "Unfortunately, I can’t support this request. I’d be happy to assist with anything related to event tickets instead.",
-    "I’m sorry, but I can’t help with this. If your concern is related to event tickets, I’ll do my best to assist.",
-    "Apologies, but this issue is outside of my capabilities. However, I’m available to help with event ticket-related requests.",
+    "Unfortunately, I'm not able to assist with this. Please let me know if there's anything I can do regarding event tickets.",
+    "I'm sorry, but I cannot assist with this topic. However, I'm here to help with any event ticket concerns you may have.",
+    "Apologies, but this request falls outside of my support scope. If you need help with event tickets, I'm happy to assist.",
+    "I'm afraid I can't help with this matter. If there's anything related to event tickets you need, feel free to reach out.",
+    "This is beyond what I can assist with at the moment. Let me know if there's anything I can do to help with event tickets.",
+    "Sorry, I'm unable to provide support on this issue. However, I'd be glad to assist with event ticket-related topics.",
+    "Apologies, but I can't assist with this. Please let me know if you have any event ticket inquiries I can help with.",
+    "I'm unable to help with this matter. However, if you need assistance with event tickets, I'm here for you.",
+    "Unfortunately, I can't support this request. I'd be happy to assist with anything related to event tickets instead.",
+    "I'm sorry, but I can't help with this. If your concern is related to event tickets, I'll do my best to assist.",
+    "Apologies, but this issue is outside of my capabilities. However, I'm available to help with event ticket-related requests.",
     "I regret that I cannot assist with this particular matter. Please let me know how I can support you regarding event tickets.",
-    "I’m sorry, but I’m not able to help in this instance. I am, however, ready to assist with any questions about event tickets.",
-    "Unfortunately, I’m unable to help with this topic. Let me know if there's anything event ticket-related I can support you with."
+    "I'm sorry, but I'm not able to help in this instance. I am, however, ready to assist with any questions about event tickets.",
+    "Unfortunately, I'm unable to help with this topic. Let me know if there's anything event ticket-related I can support you with."
 ]
 
 # =============================
@@ -377,6 +377,10 @@ if st.session_state.models_loaded:
             st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
             last_role = "assistant"
             st.rerun()
+
+    # Add disclaimer message at the bottom
+    st.markdown("---")
+    st.caption("⚠️ This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
 
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button"):
