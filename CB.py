@@ -69,7 +69,6 @@ def load_gpt2_model_and_tokenizer():
         st.error(f"Failed to load GPT-2 model from Hugging Face Hub. Error: {e}")
         return None, None
 
-# --- NEW: Function to load the classifier model ---
 @st.cache_resource(show_spinner=False)
 def load_classifier_model():
     try:
@@ -80,7 +79,6 @@ def load_classifier_model():
         st.error(f"Failed to load classifier model from Hugging Face Hub. Error: {e}")
         return None, None
 
-# --- NEW: Function to check if a query is Out-of-Domain (OOD) ---
 def is_ood(query: str, model, tokenizer):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -90,13 +88,12 @@ def is_ood(query: str, model, tokenizer):
     with torch.no_grad():
         outputs = model(**inputs)
     pred_id = torch.argmax(outputs.logits, dim=1).item()
-    return pred_id == 1  # True if OOD (label 1)
+    return pred_id == 1
 
 # =============================
 # ORIGINAL HELPER FUNCTIONS (UNCHANGED)
 # =============================
 
-#Define static placeholders with Markdown hyperlinks
 static_placeholders = {
     "{{WEBSITE_URL}}": "[website](https://github.com/MarpakaPradeepSai)",
     "{{SUPPORT_TEAM_LINK}}": "[support team](https://github.com/MarpakaPradeepSai)",
@@ -249,20 +246,19 @@ example_queries = [
     "How can I track my ticket cancellation status?", "How can I sell my ticket?"
 ]
 
-# --- MODIFIED: Load all models at once ---
 if not st.session_state.models_loaded:
     with st.spinner("Loading models and resources... Please wait..."):
         try:
             nlp = load_spacy_model()
             gpt2_model, gpt2_tokenizer = load_gpt2_model_and_tokenizer()
-            clf_model, clf_tokenizer = load_classifier_model()  # Load the new model
+            clf_model, clf_tokenizer = load_classifier_model()
 
             if all([nlp, gpt2_model, gpt2_tokenizer, clf_model, clf_tokenizer]):
                 st.session_state.models_loaded = True
                 st.session_state.nlp = nlp
-                st.session_state.model = gpt2_model # Keep original names for compatibility
+                st.session_state.model = gpt2_model
                 st.session_state.tokenizer = gpt2_tokenizer
-                st.session_state.clf_model = clf_model # Add new models to session state
+                st.session_state.clf_model = clf_model
                 st.session_state.clf_tokenizer = clf_tokenizer
                 st.rerun()
             else:
@@ -283,7 +279,6 @@ if st.session_state.models_loaded:
     )
     process_query_button = st.button("Ask this question", key="query_button")
 
-    # Access all loaded models from session state
     nlp = st.session_state.nlp
     model = st.session_state.model
     tokenizer = st.session_state.tokenizer
@@ -320,11 +315,9 @@ if st.session_state.models_loaded:
                 message_placeholder = st.empty()
                 full_response = ""
 
-                # --- ADDED: OOD CHECK ---
                 if is_ood(prompt_from_dropdown, clf_model, clf_tokenizer):
                     full_response = random.choice(fallback_responses)
                 else:
-                    # --- ORIGINAL LOGIC (UNCHANGED) ---
                     with st.spinner("Generating response..."):
                         dynamic_placeholders = extract_dynamic_placeholders(prompt_from_dropdown, nlp)
                         response_gpt = generate_response(model, tokenizer, prompt_from_dropdown)
@@ -357,11 +350,9 @@ if st.session_state.models_loaded:
                 message_placeholder = st.empty()
                 full_response = ""
 
-                # --- ADDED: OOD CHECK ---
                 if is_ood(prompt, clf_model, clf_tokenizer):
                     full_response = random.choice(fallback_responses)
                 else:
-                    # --- ORIGINAL LOGIC (UNCHANGED) ---
                     with st.spinner("Generating response..."):
                         dynamic_placeholders = extract_dynamic_placeholders(prompt, nlp)
                         response_gpt = generate_response(model, tokenizer, prompt)
@@ -377,6 +368,16 @@ if st.session_state.models_loaded:
             st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
             last_role = "assistant"
             st.rerun()
+
+    # --- NEW: ADDED INFORMATIONAL MESSAGE BELOW CHAT INPUT ---
+    st.markdown(
+        """
+        <div style="text-align: center; color: #808080; font-size: 0.8em; margin-top: 20px;">
+        This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button"):
