@@ -378,9 +378,9 @@ if st.session_state.models_loaded:
             last_role = "assistant"
             st.rerun()
 
-    # ✅ MINIMAL CHANGE: Added disclaimer message below chat input
+    # ✅ FIXED: Placed disclaimer IMMEDIATELY after chat input field
     st.markdown(
-        "<p style='font-size: 12px; color: gray; text-align: center; margin-top: 20px;'>"
+        "<p style='font-size: 12px; color: gray; text-align: center; margin-top: 5px;'>"
         "This is not a conversational AI. It is designed solely for event ticketing queries. "
         "Responses outside this scope may be inaccurate.</p>",
         unsafe_allow_html=True
