@@ -220,7 +220,7 @@ def generate_response(model, tokenizer, instruction, max_length=256):
     return response[response_start:].strip()
 
 # =============================
-# CSS AND UI SETUP (MODIFIED FOR FOOTER)
+# CSS AND UI SETUP (CORRECTED FOR FOOTER)
 # =============================
 
 st.markdown(
@@ -234,32 +234,21 @@ div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-t
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
 div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
 
-/* Footer styling to place disclaimer at the very bottom, below the chat input */
+/* --- CORRECTED FOOTER STYLING --- */
+/* The footer now uses Streamlit's theme variables to adapt to light/dark modes */
 .footer {
     position: fixed;
     left: 0;
     bottom: 0;
     width: 100%;
-    color: gray;
+    background: var(--streamlit-background-color); /* Use Streamlit's theme variable for background */
+    color: var(--streamlit-secondary-font); /* Use Streamlit's theme variable for secondary text color */
     text-align: center;
     padding: 5px 0;
     font-size: 12px;
-    z-index: 9999;  /* Ensure it's on top */
+    z-index: 9999;
 }
 .main { padding-bottom: 40px; }  /* Add padding to main content to avoid overlap */
-
-/* Adaptive background for light/dark themes */
-.footer {
-    background-color: white;
-    color: gray;
-}
-@media (prefers-color-scheme: dark) {
-    .footer {
-        background-color: #262730;  /* Streamlit dark theme background */
-        color: #ccc;  /* Lighter text for visibility in dark mode */
-    }
-    .horizontal-line { border-top: 2px solid #4d4d4d; }  /* Adjust horizontal line for dark mode */
-}
 </style>
     """, unsafe_allow_html=True
 )
