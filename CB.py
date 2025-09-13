@@ -2,11 +2,11 @@ import streamlit as st
 import torch
 from transformers import (
     GPT2Tokenizer, GPT2LMHeadModel,
-    AutoTokenizer, AutoModelForSequenceClassification  # Added for the classifier
+    AutoTokenizer, AutoModelForSequenceClassification
 )
 import spacy
 import time
-import random  # Added for fallback responses
+import random
 
 # =============================
 # MODEL AND CONFIGURATION SETUP
@@ -14,7 +14,7 @@ import random  # Added for fallback responses
 
 # Hugging Face model IDs
 GPT2_MODEL_ID = "Zlib2/ETCSCb_DistilGPT2"
-CLASSIFIER_ID = "Zlib2/Query_Classifier_DistilBERT"  # ID for the new classifier model
+CLASSIFIER_ID = "Zlib2/Query_Classifier_DistilBERT"
 
 # Random OOD Fallback Responses
 fallback_responses = [
@@ -69,7 +69,6 @@ def load_gpt2_model_and_tokenizer():
         st.error(f"Failed to load GPT-2 model from Hugging Face Hub. Error: {e}")
         return None, None
 
-# --- NEW: Function to load the classifier model ---
 @st.cache_resource(show_spinner=False)
 def load_classifier_model():
     try:
@@ -80,7 +79,6 @@ def load_classifier_model():
         st.error(f"Failed to load classifier model from Hugging Face Hub. Error: {e}")
         return None, None
 
-# --- NEW: Function to check if a query is Out-of-Domain (OOD) ---
 def is_ood(query: str, model, tokenizer):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -90,13 +88,12 @@ def is_ood(query: str, model, tokenizer):
     with torch.no_grad():
         outputs = model(**inputs)
     pred_id = torch.argmax(outputs.logits, dim=1).item()
-    return pred_id == 1  # True if OOD (label 1)
+    return pred_id == 1
 
 # =============================
 # ORIGINAL HELPER FUNCTIONS (UNCHANGED)
 # =============================
 
-#Define static placeholders with Markdown hyperlinks
 static_placeholders = {
     "{{WEBSITE_URL}}": "[website](https://github.com/MarpakaPradeepSai)",
     "{{SUPPORT_TEAM_LINK}}": "[support team](https://github.com/MarpakaPradeepSai)",
@@ -249,20 +246,19 @@ example_queries = [
     "How can I track my ticket cancellation status?", "How can I sell my ticket?"
 ]
 
-# --- MODIFIED: Load all models at once ---
 if not st.session_state.models_loaded:
     with st.spinner("Loading models and resources... Please wait..."):
         try:
             nlp = load_spacy_model()
             gpt2_model, gpt2_tokenizer = load_gpt2_model_and_tokenizer()
-            clf_model, clf_tokenizer = load_classifier_model()  # Load the new model
+            clf_model, clf_tokenizer = load_classifier_model()
 
             if all([nlp, gpt2_model, gpt2_tokenizer, clf_model, clf_tokenizer]):
                 st.session_state.models_loaded = True
                 st.session_state.nlp = nlp
-                st.session_state.model = gpt2_model # Keep original names for compatibility
+                st.session_state.model = gpt2_model
                 st.session_state.tokenizer = gpt2_tokenizer
-                st.session_state.clf_model = clf_model # Add new models to session state
+                st.session_state.clf_model = clf_model
                 st.session_state.clf_tokenizer = clf_tokenizer
                 st.rerun()
             else:
@@ -271,7 +267,7 @@ if not st.session_state.models_loaded:
             st.error(f"Error loading models: {str(e)}")
 
 # ==================================
-# MAIN CHAT INTERFACE (LOGIC ADDED)
+# MAIN CHAT INTERFACE
 # ==================================
 
 if st.session_state.models_loaded:
@@ -283,7 +279,6 @@ if st.session_state.models_loaded:
     )
     process_query_button = st.button("Ask this question", key="query_button")
 
-    # Access all loaded models from session state
     nlp = st.session_state.nlp
     model = st.session_state.model
     tokenizer = st.session_state.tokenizer
@@ -295,7 +290,6 @@ if st.session_state.models_loaded:
 
     last_role = None
 
-    # Display chat history
     for message in st.session_state.chat_history:
         if message["role"] == "user" and last_role == "assistant":
             st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
@@ -303,82 +297,60 @@ if st.session_state.models_loaded:
             st.markdown(message["content"], unsafe_allow_html=True)
         last_role = message["role"]
 
-    # Handle dropdown query
+    prompt_to_process = None
+
     if process_query_button:
-        if selected_query == "Choose your question":
-            st.error("⚠️ Please select your question from the dropdown.")
-        elif selected_query:
-            prompt_from_dropdown = selected_query
-            prompt_from_dropdown = prompt_from_dropdown[0].upper() + prompt_from_dropdown[1:] if prompt_from_dropdown else prompt_from_dropdown
-
-            st.session_state.chat_history.append({"role": "user", "content": prompt_from_dropdown, "avatar": "👤"})
-            with st.chat_message("user", avatar="👤"):
-                st.markdown(prompt_from_dropdown, unsafe_allow_html=True)
-
-            with st.chat_message("assistant", avatar="🤖"):
-                message_placeholder = st.empty()
-                full_response = ""
-
-                # --- ADDED: OOD CHECK ---
-                if is_ood(prompt_from_dropdown, clf_model, clf_tokenizer):
-                    full_response = random.choice(fallback_responses)
-                else:
-                    # --- ORIGINAL LOGIC (UNCHANGED) ---
-                    with st.spinner("Generating response..."):
-                        dynamic_placeholders = extract_dynamic_placeholders(prompt_from_dropdown, nlp)
-                        response_gpt = generate_response(model, tokenizer, prompt_from_dropdown)
-                        full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
-
-                streamed_text = ""
-                for word in full_response.split(" "):
-                    streamed_text += word + " "
-                    message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
-                    time.sleep(0.05)
-                message_placeholder.markdown(full_response, unsafe_allow_html=True)
-
-            st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
-            st.rerun()
-
-    # Handle manual chat input
-    if prompt := st.chat_input("Enter your own question:"):
-        prompt = prompt[0].upper() + prompt[1:] if prompt else prompt
-        if not prompt.strip():
-            st.toast("⚠️ Please enter a question.")
+        if selected_query != "Choose your question":
+            prompt_to_process = selected_query
         else:
-            st.session_state.chat_history.append({"role": "user", "content": prompt, "avatar": "👤"})
-            with st.chat_message("user", avatar="👤"):
-                st.markdown(prompt, unsafe_allow_html=True)
+            st.error("⚠️ Please select your question from the dropdown.")
+    
+    # We now place the caption and chat_input *outside* the button logic
+    # so they always appear at the bottom.
+    
+    # --- THIS IS THE KEY CHANGE ---
+    # The caption is placed here, so it's the last element in the main content area.
+    # The chat_input widget below is fixed to the bottom of the screen, so this
+    # caption will appear right above it.
+    st.caption("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
 
-            with st.chat_message("assistant", avatar="🤖"):
-                message_placeholder = st.empty()
-                full_response = ""
+    # We capture the chat input here. The variable 'prompt' will only have a value
+    # when the user types something and hits Enter.
+    if prompt := st.chat_input("Enter your own question:"):
+        prompt_to_process = prompt
 
-                # --- ADDED: OOD CHECK ---
-                if is_ood(prompt, clf_model, clf_tokenizer):
-                    full_response = random.choice(fallback_responses)
-                else:
-                    # --- ORIGINAL LOGIC (UNCHANGED) ---
-                    with st.spinner("Generating response..."):
-                        dynamic_placeholders = extract_dynamic_placeholders(prompt, nlp)
-                        response_gpt = generate_response(model, tokenizer, prompt)
-                        full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
+    # Now, we process whichever prompt was set (either from the button or the input box)
+    if prompt_to_process:
+        prompt = prompt_to_process[0].upper() + prompt_to_process[1:] if prompt_to_process else prompt_to_process
 
-                streamed_text = ""
-                for word in full_response.split(" "):
-                    streamed_text += word + " "
-                    message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
-                    time.sleep(0.05)
-                message_placeholder.markdown(full_response, unsafe_allow_html=True)
+        st.session_state.chat_history.append({"role": "user", "content": prompt, "avatar": "👤"})
+        
+        with st.chat_message("user", avatar="👤"):
+             st.markdown(prompt, unsafe_allow_html=True)
 
-            st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
-            st.rerun()
+        with st.chat_message("assistant", avatar="🤖"):
+            message_placeholder = st.empty()
+            full_response = ""
 
-    # Clear chat button
+            if is_ood(prompt, clf_model, clf_tokenizer):
+                full_response = random.choice(fallback_responses)
+            else:
+                with st.spinner("Generating response..."):
+                    dynamic_placeholders = extract_dynamic_placeholders(prompt, nlp)
+                    response_gpt = generate_response(model, tokenizer, prompt)
+                    full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
+
+            streamed_text = ""
+            for word in full_response.split(" "):
+                streamed_text += word + " "
+                message_placeholder.markdown(streamed_text + "▌", unsafe_allow_html=True)
+                time.sleep(0.05)
+            message_placeholder.markdown(full_response, unsafe_allow_html=True)
+
+        st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
+        st.rerun()
+
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button"):
             st.session_state.chat_history = []
             st.rerun()
-            
-    # --- THIS IS THE FINAL ELEMENT RENDERED BEFORE THE CHAT INPUT ---
-    # By placing it here, it will appear as a footer just above the input field.
-    st.caption("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
