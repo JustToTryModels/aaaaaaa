@@ -383,6 +383,6 @@ if st.session_state.models_loaded:
             st.session_state.chat_history = []
             last_role = None
             st.rerun()
-
-    # <<<--- MINIMAL CHANGE: DISCLAIMER MESSAGE IS NOW AT THE VERY BOTTOM OF THE CONTENT AREA --- >>>
+            
+    # --- ADDED DISCLAIMER MESSAGE AT THE BOTTOM ---
     st.caption("This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.")
