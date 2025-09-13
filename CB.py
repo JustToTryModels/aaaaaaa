@@ -383,13 +383,9 @@ if st.session_state.models_loaded:
             st.session_state.chat_history = []
             last_role = None
             st.rerun()
-            
-    # --- CHANGE: ADDED THE DISCLAIMER MESSAGE AT THE VERY BOTTOM ---
+
+    # --- ADDED: Disclaimer message at the bottom ---
     st.markdown(
-        """
-        <div style='text-align: center; color: grey; font-size: 0.9em; margin-top: 25px;'>
-        This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.
-        </div>
-        """,
+        "<p style='font-size: 0.9em; color: grey; text-align: center;'>This is not a conversational AI. It is designed solely for event ticketing queries. Responses outside this scope may be inaccurate.</p>",
         unsafe_allow_html=True
     )
