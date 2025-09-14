@@ -69,7 +69,6 @@ def load_gpt2_model_and_tokenizer():
         st.error(f"Failed to load GPT-2 model from Hugging Face Hub. Error: {e}")
         return None, None
 
-# --- NEW: Function to load the classifier model ---
 @st.cache_resource(show_spinner=False)
 def load_classifier_model():
     try:
@@ -80,7 +79,6 @@ def load_classifier_model():
         st.error(f"Failed to load classifier model from Hugging Face Hub. Error: {e}")
         return None, None
 
-# --- NEW: Function to check if a query is Out-of-Domain (OOD) ---
 def is_ood(query: str, model, tokenizer):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -210,7 +208,7 @@ def generate_response(model, tokenizer, instruction, max_length=256):
             attention_mask=inputs["attention_mask"],
             max_length=max_length,
             num_return_sequences=1,
-            temperature=0.4,
+            temperature=0.6,
             top_p=0.95,
             do_sample=True,
             pad_token_id=tokenizer.eos_token_id
@@ -220,7 +218,7 @@ def generate_response(model, tokenizer, instruction, max_length=256):
     return response[response_start:].strip()
 
 # =============================
-# CSS AND UI SETUP (CORRECTED FOR FOOTER)
+# CSS AND UI SETUP
 # =============================
 
 st.markdown(
@@ -234,26 +232,23 @@ div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-t
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
 div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
 
-/* --- CORRECTED FOOTER STYLING --- */
-/* The footer background adapts to the theme, while the text color remains gray. */
 .footer {
     position: fixed;
     left: 0;
     bottom: 0;
     width: 100%;
-    background: var(--streamlit-background-color); /* Use Streamlit's theme variable to adapt to light/dark mode */
-    color: gray; /* Reverted to the original 'gray' color as requested */
+    background: var(--streamlit-background-color);
+    color: gray;
     text-align: center;
     padding: 5px 0;
     font-size: 13px;
     z-index: 9999;
 }
-.main { padding-bottom: 40px; }  /* Add padding to main content to avoid overlap */
+.main { padding-bottom: 40px; }
 </style>
     """, unsafe_allow_html=True
 )
 
-# Add the fixed footer disclaimer at the very beginning (to ensure it's rendered early and persists during generation)
 st.markdown(
     """
     <div class="footer">
@@ -275,20 +270,19 @@ example_queries = [
     "How can I track my ticket cancellation status?", "How can I sell my ticket?"
 ]
 
-# --- MODIFIED: Load all models at once ---
 if not st.session_state.models_loaded:
     with st.spinner("Loading models and resources... Please wait..."):
         try:
             nlp = load_spacy_model()
             gpt2_model, gpt2_tokenizer = load_gpt2_model_and_tokenizer()
-            clf_model, clf_tokenizer = load_classifier_model()  # Load the new model
+            clf_model, clf_tokenizer = load_classifier_model()
 
             if all([nlp, gpt2_model, gpt2_tokenizer, clf_model, clf_tokenizer]):
                 st.session_state.models_loaded = True
                 st.session_state.nlp = nlp
-                st.session_state.model = gpt2_model # Keep original names for compatibility
+                st.session_state.model = gpt2_model
                 st.session_state.tokenizer = gpt2_tokenizer
-                st.session_state.clf_model = clf_model # Add new models to session state
+                st.session_state.clf_model = clf_model
                 st.session_state.clf_tokenizer = clf_tokenizer
                 st.rerun()
             else:
@@ -297,7 +291,7 @@ if not st.session_state.models_loaded:
             st.error(f"Error loading models: {str(e)}")
 
 # ==================================
-# MAIN CHAT INTERFACE (LOGIC ADDED)
+# MAIN CHAT INTERFACE
 # ==================================
 
 if st.session_state.models_loaded:
@@ -309,7 +303,6 @@ if st.session_state.models_loaded:
     )
     process_query_button = st.button("Ask this question", key="query_button")
 
-    # Access all loaded models from session state
     nlp = st.session_state.nlp
     model = st.session_state.model
     tokenizer = st.session_state.tokenizer
@@ -346,24 +339,34 @@ if st.session_state.models_loaded:
                 message_placeholder = st.empty()
                 full_response = ""
 
-                # --- ADDED: OOD CHECK ---
+                # --- NEW: Start timer ---
+                start_time = time.time()
+
                 if is_ood(prompt_from_dropdown, clf_model, clf_tokenizer):
                     full_response = random.choice(fallback_responses)
                 else:
-                    # --- ORIGINAL LOGIC (UNCHANGED) ---
                     with st.spinner("Generating response..."):
                         dynamic_placeholders = extract_dynamic_placeholders(prompt_from_dropdown, nlp)
                         response_gpt = generate_response(model, tokenizer, prompt_from_dropdown)
                         full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
+
+                # --- NEW: End timer and calculate duration ---
+                end_time = time.time()
+                response_time = end_time - start_time
+                time_info = f"<br><small><i>Response generated in {response_time:.2f} seconds</i></small>"
 
                 streamed_text = ""
                 for word in full_response.split(" "):
                     streamed_text += word + " "
                     message_placeholder.markdown(streamed_text + "⬤", unsafe_allow_html=True)
                     time.sleep(0.05)
-                message_placeholder.markdown(full_response, unsafe_allow_html=True)
+                
+                # --- NEW: Display final response with time info ---
+                final_content = full_response + time_info
+                message_placeholder.markdown(final_content, unsafe_allow_html=True)
 
-            st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
+            # --- NEW: Save final content (with time info) to history ---
+            st.session_state.chat_history.append({"role": "assistant", "content": final_content, "avatar": "🤖"})
             last_role = "assistant"
             st.rerun()
 
@@ -383,24 +386,34 @@ if st.session_state.models_loaded:
                 message_placeholder = st.empty()
                 full_response = ""
 
-                # --- ADDED: OOD CHECK ---
+                # --- NEW: Start timer ---
+                start_time = time.time()
+
                 if is_ood(prompt, clf_model, clf_tokenizer):
                     full_response = random.choice(fallback_responses)
                 else:
-                    # --- ORIGINAL LOGIC (UNCHANGED) ---
                     with st.spinner("Generating response..."):
                         dynamic_placeholders = extract_dynamic_placeholders(prompt, nlp)
                         response_gpt = generate_response(model, tokenizer, prompt)
                         full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
+
+                # --- NEW: End timer and calculate duration ---
+                end_time = time.time()
+                response_time = end_time - start_time
+                time_info = f"<br><small><i>Response generated in {response_time:.2f} seconds</i></small>"
 
                 streamed_text = ""
                 for word in full_response.split(" "):
                     streamed_text += word + " "
                     message_placeholder.markdown(streamed_text + "⬤", unsafe_allow_html=True)
                     time.sleep(0.05)
-                message_placeholder.markdown(full_response, unsafe_allow_html=True)
+                
+                # --- NEW: Display final response with time info ---
+                final_content = full_response + time_info
+                message_placeholder.markdown(final_content, unsafe_allow_html=True)
 
-            st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
+            # --- NEW: Save final content (with time info) to history ---
+            st.session_state.chat_history.append({"role": "assistant", "content": final_content, "avatar": "🤖"})
             last_role = "assistant"
             st.rerun()
 
