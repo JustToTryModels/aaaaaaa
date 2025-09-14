@@ -220,7 +220,7 @@ def generate_response(model, tokenizer, instruction, max_length=256):
     return response[response_start:].strip()
 
 # =============================
-# CSS AND UI SETUP (MODIFIED FOR FIXED FOOTER/INPUT)
+# CSS AND UI SETUP (CORRECTED FOR FIXED FOOTER/INPUT)
 # =============================
 
 st.markdown(
@@ -233,17 +233,14 @@ st.markdown(
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
 
-/* --- MODIFIED: Fixes the chat input to the bottom, just above the footer --- */
+/* --- CORRECTED: Fixes the chat input to the bottom, respecting the container's width --- */
 div[data-testid="stChatInput"] {
     position: fixed;
     bottom: 28px !important;
     background: var(--streamlit-background-color);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    border-radius: 5px;
     padding: 10px;
     margin: 0;
-    width: 100%;
-    left: 0;
     z-index: 9998;
 }
 
@@ -260,7 +257,7 @@ div[data-testid="stChatInput"] {
     font-size: 13px;
     z-index: 9999;
 }
-/* --- MODIFIED: Add enough padding to the main content area to avoid overlap --- */
+/* --- Add enough padding to the main content area to avoid overlap --- */
 .main { padding-bottom: 90px; }
 </style>
     """, unsafe_allow_html=True
