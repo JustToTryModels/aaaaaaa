@@ -206,6 +206,9 @@ st.markdown(
 .stButton>button { background: linear-gradient(90deg, #ff8a00, #e52e71); color: white !important; border: none; border-radius: 25px; padding: 10px 20px; font-size: 1.2em; font-weight: bold; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; display: inline-flex; align-items: center; justify-content: center; margin-top: 5px; width: auto; min-width: 100px; font-family: 'Times New Roman', Times, serif !important; }
 .stButton>button:hover { transform: scale(1.05); box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3); color: white !important; }
 .stButton>button:active { transform: scale(0.98); }
+/* Specific style for the stop button */
+.stButton>button[kind="secondary"] { background: linear-gradient(90deg, #D3D3D3, #A9A9A9); color: black !important; border: 1px solid #808080; width: 100%; }
+.stButton>button[kind="secondary"]:hover { background: linear-gradient(90deg, #A9A9A9, #808080); border: 1px solid black; }
 * { font-family: 'Times New Roman', Times, serif !important; }
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
@@ -223,7 +226,7 @@ div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); borde
     font-size: 13px;
     z-index: 9999;
 }
-.main { padding-bottom: 40px; }
+.main { padding-bottom: 50px; } /* Increased padding for the input area */
 </style>
     """, unsafe_allow_html=True
 )
@@ -239,11 +242,13 @@ st.markdown(
 
 st.markdown("<h1 style='font-size: 43px;'>Advanced Event Ticketing Chatbot</h1>", unsafe_allow_html=True)
 
-# --- FIX: Initialize state variables for managing generation process ---
+# --- NEW: Initialize all state variables ---
 if "models_loaded" not in st.session_state:
     st.session_state.models_loaded = False
 if "generating" not in st.session_state:
-    st.session_state.generating = False # This will track if a response is being generated
+    st.session_state.generating = False
+if "stop_generation" not in st.session_state:
+    st.session_state.stop_generation = False # Flag to signal interruption
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
@@ -281,7 +286,6 @@ if not st.session_state.models_loaded:
 if st.session_state.models_loaded:
     st.write("Ask me about ticket bookings, cancellations, refunds, or any event-related inquiries!")
 
-    # --- FIX: Disable input widgets while generating a response ---
     selected_query = st.selectbox(
         "Choose a query from examples:", ["Choose your question"] + example_queries,
         key="query_selectbox", label_visibility="collapsed",
@@ -307,72 +311,78 @@ if st.session_state.models_loaded:
             st.markdown(message["content"], unsafe_allow_html=True)
         last_role = message["role"]
 
-    # --- REFACTORED: Create a unified function to handle prompt processing ---
     def handle_prompt(prompt_text):
         if not prompt_text or not prompt_text.strip():
             st.toast("⚠️ Please enter or select a question.")
             return
 
-        # --- FIX: Set generating state to True to lock the UI ---
         st.session_state.generating = True
-
         prompt_text = prompt_text[0].upper() + prompt_text[1:]
         st.session_state.chat_history.append({"role": "user", "content": prompt_text, "avatar": "👤"})
-
-        # Rerun to display the user's message and disable inputs immediately
         st.rerun()
 
-
     def process_generation():
-        # This function runs only after the UI is locked and the user message is shown
         last_message = st.session_state.chat_history[-1]["content"]
 
         with st.chat_message("assistant", avatar="🤖"):
             message_placeholder = st.empty()
             full_response = ""
-
+            
             if is_ood(last_message, clf_model, clf_tokenizer):
                 full_response = random.choice(fallback_responses)
             else:
-                with st.spinner("Generating response..."):
+                with st.spinner("Finding the best answer..."):
                     dynamic_placeholders = extract_dynamic_placeholders(last_message, nlp)
                     response_gpt = generate_response(model, tokenizer, last_message)
                     full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
 
             streamed_text = ""
             for word in full_response.split(" "):
+                # --- NEW: Check for the stop signal on each iteration ---
+                if st.session_state.get('stop_generation', False):
+                    streamed_text += "..."
+                    message_placeholder.markdown(streamed_text, unsafe_allow_html=True)
+                    break 
+
                 streamed_text += word + " "
                 message_placeholder.markdown(streamed_text + "⬤", unsafe_allow_html=True)
                 time.sleep(0.05)
-            message_placeholder.markdown(full_response, unsafe_allow_html=True)
+            
+            # Update with the final text (either complete or partial)
+            message_placeholder.markdown(streamed_text, unsafe_allow_html=True)
 
-        st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
-        # --- FIX: Set generating state to False to unlock UI ---
+        st.session_state.chat_history.append({"role": "assistant", "content": streamed_text.strip(), "avatar": "🤖"})
+        
+        # --- NEW: Reset all state flags after generation is done or stopped ---
         st.session_state.generating = False
+        st.session_state.stop_generation = False
 
 
-    # --- LOGIC FLOW ---
-    # 1. Handle triggers (button click or chat input)
     if process_query_button:
         if selected_query != "Choose your question":
             handle_prompt(selected_query)
         else:
             st.error("⚠️ Please select your question from the dropdown.")
 
-    if prompt := st.chat_input("Enter your own question:", disabled=st.session_state.generating):
-        handle_prompt(prompt)
+    # --- NEW: Logic for displaying either the chat input or the stop button ---
+    if st.session_state.generating:
+        # While generating, show a stop button
+        if st.button("⏹️ Stop Generation", key="stop_button", type="secondary"):
+            st.session_state.stop_generation = True
+            # No rerun here; the loop will catch the state change
+    else:
+        # When not generating, show the chat input
+        if prompt := st.chat_input("Enter your own question:"):
+            handle_prompt(prompt)
 
-    # 2. If UI is locked, it means we need to generate a response
     if st.session_state.generating:
         process_generation()
-        # After generation, rerun to update the UI with the final response and re-enable inputs
         st.rerun()
 
-
-    # The clear button should also be disabled during generation
     if st.session_state.chat_history:
         if st.button("Clear Chat", key="reset_button", disabled=st.session_state.generating):
             st.session_state.chat_history = []
-            st.session_state.generating = False # Ensure state is reset
+            st.session_state.generating = False
+            st.session_state.stop_generation = False
             last_role = None
             st.rerun()
