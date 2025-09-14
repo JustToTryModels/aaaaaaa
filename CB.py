@@ -13,8 +13,8 @@ import random  # Added for fallback responses
 # =============================
 
 # Hugging Face model IDs
-GPT2_MODEL_ID = "Zlib2/ETCSCb_DistilGPT2"
-CLASSIFIER_ID = "Zlib2/Query_Classifier_DistilBERT"  # ID for the new classifier model
+GPT2_MODEL_ID = "IamPradeep/AETCSCB_OOD_IC_DistilGPT2_Fine-tuned"
+CLASSIFIER_ID = "IamPradeep/Query_Classifier_DistilBERT"  # ID for the new classifier model
 
 # Random OOD Fallback Responses
 fallback_responses = [
