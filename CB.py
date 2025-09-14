@@ -2,11 +2,11 @@ import streamlit as st
 import torch
 from transformers import (
     GPT2Tokenizer, GPT2LMHeadModel,
-    AutoTokenizer, AutoModelForSequenceClassification
+    AutoTokenizer, AutoModelForSequenceClassification  # Added for the classifier
 )
 import spacy
-import time  # Already imported, will be used for timing
-import random
+import time
+import random  # Added for fallback responses
 
 # =============================
 # MODEL AND CONFIGURATION SETUP
@@ -69,6 +69,7 @@ def load_gpt2_model_and_tokenizer():
         st.error(f"Failed to load GPT-2 model from Hugging Face Hub. Error: {e}")
         return None, None
 
+# --- NEW: Function to load the classifier model ---
 @st.cache_resource(show_spinner=False)
 def load_classifier_model():
     try:
@@ -79,6 +80,7 @@ def load_classifier_model():
         st.error(f"Failed to load classifier model from Hugging Face Hub. Error: {e}")
         return None, None
 
+# --- NEW: Function to check if a query is Out-of-Domain (OOD) ---
 def is_ood(query: str, model, tokenizer):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -208,7 +210,7 @@ def generate_response(model, tokenizer, instruction, max_length=256):
             attention_mask=inputs["attention_mask"],
             max_length=max_length,
             num_return_sequences=1,
-            temperature=0.6,
+            temperature=0.4,
             top_p=0.95,
             do_sample=True,
             pad_token_id=tokenizer.eos_token_id
@@ -218,7 +220,7 @@ def generate_response(model, tokenizer, instruction, max_length=256):
     return response[response_start:].strip()
 
 # =============================
-# CSS AND UI SETUP
+# CSS AND UI SETUP (CORRECTED FOR FOOTER)
 # =============================
 
 st.markdown(
@@ -231,12 +233,27 @@ st.markdown(
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
 div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
-.footer { position: fixed; left: 0; bottom: 0; width: 100%; background: var(--streamlit-background-color); color: gray; text-align: center; padding: 5px 0; font-size: 13px; z-index: 9999; }
-.main { padding-bottom: 40px; }
+
+/* --- CORRECTED FOOTER STYLING --- */
+/* The footer background adapts to the theme, while the text color remains gray. */
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background: var(--streamlit-background-color); /* Use Streamlit's theme variable to adapt to light/dark mode */
+    color: gray; /* Reverted to the original 'gray' color as requested */
+    text-align: center;
+    padding: 5px 0;
+    font-size: 13px;
+    z-index: 9999;
+}
+.main { padding-bottom: 40px; }  /* Add padding to main content to avoid overlap */
 </style>
     """, unsafe_allow_html=True
 )
 
+# Add the fixed footer disclaimer at the very beginning (to ensure it's rendered early and persists during generation)
 st.markdown(
     """
     <div class="footer">
@@ -258,19 +275,20 @@ example_queries = [
     "How can I track my ticket cancellation status?", "How can I sell my ticket?"
 ]
 
+# --- MODIFIED: Load all models at once ---
 if not st.session_state.models_loaded:
     with st.spinner("Loading models and resources... Please wait..."):
         try:
             nlp = load_spacy_model()
             gpt2_model, gpt2_tokenizer = load_gpt2_model_and_tokenizer()
-            clf_model, clf_tokenizer = load_classifier_model()
+            clf_model, clf_tokenizer = load_classifier_model()  # Load the new model
 
             if all([nlp, gpt2_model, gpt2_tokenizer, clf_model, clf_tokenizer]):
                 st.session_state.models_loaded = True
                 st.session_state.nlp = nlp
-                st.session_state.model = gpt2_model
+                st.session_state.model = gpt2_model # Keep original names for compatibility
                 st.session_state.tokenizer = gpt2_tokenizer
-                st.session_state.clf_model = clf_model
+                st.session_state.clf_model = clf_model # Add new models to session state
                 st.session_state.clf_tokenizer = clf_tokenizer
                 st.rerun()
             else:
@@ -279,7 +297,7 @@ if not st.session_state.models_loaded:
             st.error(f"Error loading models: {str(e)}")
 
 # ==================================
-# MAIN CHAT INTERFACE
+# MAIN CHAT INTERFACE (LOGIC ADDED)
 # ==================================
 
 if st.session_state.models_loaded:
@@ -291,6 +309,7 @@ if st.session_state.models_loaded:
     )
     process_query_button = st.button("Ask this question", key="query_button")
 
+    # Access all loaded models from session state
     nlp = st.session_state.nlp
     model = st.session_state.model
     tokenizer = st.session_state.tokenizer
@@ -302,20 +321,11 @@ if st.session_state.models_loaded:
 
     last_role = None
 
-    # --- MODIFIED: Chat history rendering loop ---
     for message in st.session_state.chat_history:
         if message["role"] == "user" and last_role == "assistant":
             st.markdown("<div class='horizontal-line'></div>", unsafe_allow_html=True)
-            
         with st.chat_message(message["role"], avatar=message["avatar"]):
-            content_to_display = message["content"]
-            # NEW: Check if the message is from the assistant and has a response time to display
-            if message["role"] == "assistant" and "time" in message:
-                time_str = f"<small><i>({message['time']:.2f}s)</i></small><br>"
-                content_to_display = time_str + message["content"]
-            
-            st.markdown(content_to_display, unsafe_allow_html=True)
-            
+            st.markdown(message["content"], unsafe_allow_html=True)
         last_role = message["role"]
 
     if process_query_button:
@@ -336,40 +346,24 @@ if st.session_state.models_loaded:
                 message_placeholder = st.empty()
                 full_response = ""
 
-                # --- NEW: Start timer ---
-                start_time = time.time()
-                
+                # --- ADDED: OOD CHECK ---
                 if is_ood(prompt_from_dropdown, clf_model, clf_tokenizer):
                     full_response = random.choice(fallback_responses)
                 else:
+                    # --- ORIGINAL LOGIC (UNCHANGED) ---
                     with st.spinner("Generating response..."):
                         dynamic_placeholders = extract_dynamic_placeholders(prompt_from_dropdown, nlp)
                         response_gpt = generate_response(model, tokenizer, prompt_from_dropdown)
                         full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
 
-                # --- NEW: End timer and calculate duration ---
-                end_time = time.time()
-                response_time = end_time - start_time
-                
-                # Prepend the time to the streamed output for a better user experience
-                time_display_str = f"<small><i>({response_time:.2f}s)</i></small><br>"
-                
-                streamed_text = time_display_str
+                streamed_text = ""
                 for word in full_response.split(" "):
                     streamed_text += word + " "
                     message_placeholder.markdown(streamed_text + "⬤", unsafe_allow_html=True)
                     time.sleep(0.05)
-                
-                final_display = time_display_str + full_response
-                message_placeholder.markdown(final_display, unsafe_allow_html=True)
+                message_placeholder.markdown(full_response, unsafe_allow_html=True)
 
-            # --- MODIFIED: Append response time to chat history ---
-            st.session_state.chat_history.append({
-                "role": "assistant", 
-                "content": full_response, 
-                "avatar": "🤖", 
-                "time": response_time
-            })
+            st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
             last_role = "assistant"
             st.rerun()
 
@@ -389,39 +383,24 @@ if st.session_state.models_loaded:
                 message_placeholder = st.empty()
                 full_response = ""
 
-                # --- NEW: Start timer ---
-                start_time = time.time()
-                
+                # --- ADDED: OOD CHECK ---
                 if is_ood(prompt, clf_model, clf_tokenizer):
                     full_response = random.choice(fallback_responses)
                 else:
+                    # --- ORIGINAL LOGIC (UNCHANGED) ---
                     with st.spinner("Generating response..."):
                         dynamic_placeholders = extract_dynamic_placeholders(prompt, nlp)
                         response_gpt = generate_response(model, tokenizer, prompt)
                         full_response = replace_placeholders(response_gpt, dynamic_placeholders, static_placeholders)
 
-                # --- NEW: End timer and calculate duration ---
-                end_time = time.time()
-                response_time = end_time - start_time
-                
-                time_display_str = f"<small><i>({response_time:.2f}s)</i></small><br>"
-
-                streamed_text = time_display_str
+                streamed_text = ""
                 for word in full_response.split(" "):
                     streamed_text += word + " "
                     message_placeholder.markdown(streamed_text + "⬤", unsafe_allow_html=True)
                     time.sleep(0.05)
-                
-                final_display = time_display_str + full_response
-                message_placeholder.markdown(final_display, unsafe_allow_html=True)
+                message_placeholder.markdown(full_response, unsafe_allow_html=True)
 
-            # --- MODIFIED: Append response time to chat history ---
-            st.session_state.chat_history.append({
-                "role": "assistant", 
-                "content": full_response, 
-                "avatar": "🤖",
-                "time": response_time
-            })
+            st.session_state.chat_history.append({"role": "assistant", "content": full_response, "avatar": "🤖"})
             last_role = "assistant"
             st.rerun()
 
