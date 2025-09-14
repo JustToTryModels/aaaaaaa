@@ -220,7 +220,7 @@ def generate_response(model, tokenizer, instruction, max_length=256):
     return response[response_start:].strip()
 
 # =============================
-# CSS AND UI SETUP (MODIFIED TO MATCH REFERENCE CODE)
+# CSS AND UI SETUP (CORRECTED FOR FOOTER)
 # =============================
 
 st.markdown(
@@ -232,25 +232,23 @@ st.markdown(
 * { font-family: 'Times New Roman', Times, serif !important; }
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
-
-/* --- MODIFIED: This CSS rule now matches the reference code for the desired width and layout --- */
 div[data-testid="stChatInput"] { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 10px; margin: 10px 0; }
 
-/* --- The footer remains fixed to the absolute bottom --- */
+/* --- CORRECTED FOOTER STYLING --- */
+/* The footer background adapts to the theme, while the text color remains gray. */
 .footer {
     position: fixed;
     left: 0;
     bottom: 0;
     width: 100%;
-    background: var(--streamlit-background-color);
-    color: gray;
+    background: var(--streamlit-background-color); /* Use Streamlit's theme variable to adapt to light/dark mode */
+    color: gray; /* Reverted to the original 'gray' color as requested */
     text-align: center;
     padding: 5px 0;
     font-size: 13px;
     z-index: 9999;
 }
-/* --- MODIFIED: Padding adjusted to match the reference code's layout --- */
-.main { padding-bottom: 40px; }
+.main { padding-bottom: 40px; }  /* Add padding to main content to avoid overlap */
 </style>
     """, unsafe_allow_html=True
 )
