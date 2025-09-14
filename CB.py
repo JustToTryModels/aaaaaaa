@@ -220,7 +220,7 @@ def generate_response(model, tokenizer, instruction, max_length=256):
     return response[response_start:].strip()
 
 # =============================
-# CSS AND UI SETUP (CORRECTED FOR FOOTER AND CHAT INPUT WIDTH)
+# CSS AND UI SETUP (CORRECTED FOR FOOTER AND CHAT INPUT)
 # =============================
 
 st.markdown(
@@ -233,34 +233,33 @@ st.markdown(
 div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:nth-of-type(1) { background: linear-gradient(90deg, #29ABE2, #0077B6); color: white !important; }
 .horizontal-line { border-top: 2px solid #e0e0e0; margin: 15px 0; }
 
-/* Chat input styling - now matches natural width (like Code-1) */
+/* Chat input: natural width (like Code-1), but close to footer */
 div[data-testid="stChatInput"] {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     border-radius: 5px;
     padding: 10px;
-    margin: 10px 0;
+    margin: 10px 0 30px 0; /* Extra bottom margin to sit above footer */
 }
 
 /* --- CORRECTED FOOTER STYLING --- */
-/* The footer background adapts to the theme, while the text color remains gray. */
 .footer {
     position: fixed;
     left: 0;
     bottom: 0;
     width: 100%;
-    background: var(--streamlit-background-color); /* Use Streamlit's theme variable to adapt to light/dark mode */
-    color: gray; /* Reverted to the original 'gray' color as requested */
+    background: var(--streamlit-background-color);
+    color: gray;
     text-align: center;
     padding: 5px 0;
     font-size: 13px;
     z-index: 9999;
 }
-.main { padding-bottom: 40px; }  /* Add padding to main content to avoid overlap */
+.main { padding-bottom: 30px; }  /* Slightly reduced to allow chat input to sit closer */
 </style>
     """, unsafe_allow_html=True
 )
 
-# Add the fixed footer disclaimer at the very beginning (to ensure it's rendered early and persists during generation)
+# Add the fixed footer disclaimer
 st.markdown(
     """
     <div class="footer">
